@@ -12,6 +12,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Map.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Map.Distance.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Map.Span.cs" />
-    <Content Include="$(MSBuildThisFileDirectory)Zebble.Plugin.Map.nuspec" />
+    <Content Include="$(MSBuildThisFileDirectory)Icon.png" />
+    <Content Include="$(MSBuildThisFileDirectory)Nuget.nuspec" />
   </ItemGroup>
 </Project>
