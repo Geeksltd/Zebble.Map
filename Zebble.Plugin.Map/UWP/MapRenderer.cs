@@ -1,17 +1,17 @@
-namespace Zebble.Plugin
+namespace Zebble.Plugin.Renderer
 {
     using System;
     using System.ComponentModel;
-    using Zebble;
+    using System.IO;
+    using System.Linq;
     using System.Threading.Tasks;
+    using Windows.Devices.Geolocation;
+    using Windows.Storage;
+    using Windows.Storage.Streams;
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls.Maps;
-    using System.Linq;
+    using Zebble;
     using Zebble.Services;
-    using Windows.Devices.Geolocation;
-    using Windows.Storage.Streams;
-    using Windows.Storage;
-    using System.IO;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     public class MapRenderer : ICustomRenderer

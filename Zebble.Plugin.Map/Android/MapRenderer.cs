@@ -1,13 +1,13 @@
-namespace Zebble.Plugin
+namespace Zebble.Plugin.Renderer
 {
     using System;
     using System.ComponentModel;
-    using Zebble;
     using System.Threading.Tasks;
-    using Android.Widget;
     using Android.Gms.Maps;
-    using Zebble.Services;
     using Android.Gms.Maps.Model;
+    using Android.Widget;
+    using Zebble;
+    using Zebble.Services;
     using static Zebble.Plugin.Map;
 
     [EditorBrowsable(EditorBrowsableState.Never)]

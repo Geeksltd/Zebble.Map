@@ -3,12 +3,11 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Text;
     using System.Threading.Tasks;
     using Zebble;
     using Zebble.Services;
 
-    public partial class Map : CustomRenderedView<MapRenderer>
+    public partial class Map : CustomRenderedView<Renderer.MapRenderer>
     {
         public static double DefaultLatitude = 51.5074;
         public static double DefaultLongitude = -0.1278;

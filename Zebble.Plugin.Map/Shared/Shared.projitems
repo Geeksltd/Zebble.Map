@@ -12,7 +12,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)Map.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Map.Distance.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Map.Span.cs" />
-    <Content Include="$(MSBuildThisFileDirectory)Icon.png" />
-    <Content Include="$(MSBuildThisFileDirectory)Nuget.nuspec" />
+    <None Include="$(MSBuildThisFileDirectory)Icon.png" />
+    <None Include="$(MSBuildThisFileDirectory)NuGet\Nuget.nuspec" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)NuGet\" />
   </ItemGroup>
 </Project>

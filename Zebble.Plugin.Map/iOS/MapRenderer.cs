@@ -1,7 +1,8 @@
-namespace Zebble.Plugin
+namespace Zebble.Plugin.Renderer
 {
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
     using System.Linq;
     using System.Threading.Tasks;
     using CoreLocation;
@@ -10,6 +11,7 @@ namespace Zebble.Plugin
     using UIKit;
     using static Zebble.Plugin.Map;
 
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public class MapRenderer : ICustomRenderer
     {
         Map View;
