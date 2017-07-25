@@ -14,15 +14,15 @@ namespace Zebble.Plugin.Renderer
     using Zebble.Services;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public class MapRenderer : ICustomRenderer
+    public class MapRenderer : INativeRenderer
     {
         Map View;
         MapControl Result;
         const double DEGREE360 = 360;
 
-        public async Task<FrameworkElement> Render(object view)
+        public async Task<FrameworkElement> Render(Renderer renderer)
         {
-            View = (Map)view;
+            View = (Map)renderer.View;
             Result = new MapControl
             {
                 VerticalAlignment = Windows.UI.Xaml.VerticalAlignment.Stretch,

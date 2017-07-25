@@ -12,7 +12,7 @@ namespace Zebble.Plugin.Renderer
     using static Zebble.Plugin.Map;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public class MapRenderer : ICustomRenderer
+    public class MapRenderer : INativeRenderer
     {
         Map View;
         MKMapView Result;
@@ -23,9 +23,9 @@ namespace Zebble.Plugin.Renderer
 
         List<object> ActionList = new List<object>();
 
-        public async Task<UIView> Render(object view)
+        public async Task<UIView> Render(Zebble.Renderer renderer)
         {
-            View = (Map)view;
+            View = (Map)renderer.View;
             Result = new MKMapView();
             await GenerateMap();
             return Result;
@@ -167,7 +167,8 @@ namespace Zebble.Plugin.Renderer
         public void Dispose()
         {
             View = null;
-            Result.Dispose();
+            Result?.Dispose();
+            Result = null;
         }
     }
 }

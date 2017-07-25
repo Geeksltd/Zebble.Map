@@ -55,8 +55,7 @@
     <Reference Include="System.Core" />
     <Reference Include="Xamarin.iOS" />
     <Reference Include="Zebble.iOS, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Zebble.4.0.221\lib\Xamarin.iOS10\Zebble.iOS.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\..\packages\Zebble.4.0.239\lib\Xamarin.iOS10\Zebble.iOS.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -64,6 +63,9 @@
     <Compile Include="BasicMapAnnotation.cs" />
     <Compile Include="MapRenderer.cs" />
     <Compile Include="IosMapDelegate.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Zebble-LicenseAgreement.txt" />
   </ItemGroup>
   <Import Project="..\Shared\Shared.projitems" Label="Shared" Condition="Exists('..\Shared\Shared.projitems')" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />

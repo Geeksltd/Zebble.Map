@@ -5,13 +5,14 @@ namespace Zebble.Plugin.Renderer
     using System.Threading.Tasks;
     using Android.Gms.Maps;
     using Android.Gms.Maps.Model;
+    using Android.Views;
     using Android.Widget;
     using Zebble;
     using Zebble.Services;
     using static Zebble.Plugin.Map;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public class MapRenderer : ICustomRenderer
+    public class MapRenderer : INativeRenderer
     {
         Map View;
         FrameLayout Result;
@@ -20,9 +21,9 @@ namespace Zebble.Plugin.Renderer
         GoogleMap Map;
         const double DEGREE360 = 360;
 
-        public async Task<Android.Views.View> Render(object view)
+        public async Task<Android.Views.View> Render(Renderer renderer)
         {
-            View = (Map)view;
+            View = (Map)renderer.View;
             Result = new FrameLayout(Renderer.Context) { Id = Android.Views.View.GenerateViewId() };
 
             await View.WhenShown(LoadMap);
@@ -193,8 +194,8 @@ namespace Zebble.Plugin.Renderer
             Fragment?.Dispose();
             Fragment = null;
             View = null;
-
-            Result.Dispose();
+            Result?.Dispose();
+            Result = null;
         }
     }
 
