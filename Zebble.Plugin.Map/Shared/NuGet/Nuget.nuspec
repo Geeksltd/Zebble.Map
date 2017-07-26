@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
   <metadata>
     <id>Zebble.Plugin.Map</id>
-    <version>4.1.304</version>
+    <version>4.1.305</version>
     <title>Map for Zebble for Xamarin</title>
     <projectUrl>https://zebble.net/</projectUrl>
     <iconUrl>https://raw.githubusercontent.com/Geeksltd/Zebble.Plugin.Map/master/Zebble.Plugin.Map/Shared/Icon.png</iconUrl>
@@ -12,10 +12,10 @@
     <dependencies>
       <group targetFramework="MonoAndroid10">
         <dependency id="Xamarin.GooglePlayServices.Maps" version="42.1021.1" />
-        <dependency id="Zebble" version= "4.0.239"/>
+        <dependency id="Zebble" version= "4.0.243"/>
       </group>
       <group targetFramework="Xamarin.iOS10">
-        <dependency id="Zebble" version= "4.0.239"/>
+        <dependency id="Zebble" version= "4.0.243"/>
       </group>
     </dependencies>
   </metadata>
