@@ -2,6 +2,7 @@ namespace Zebble.Plugin.Renderer
 {
     using System;
     using System.ComponentModel;
+    using System.Linq;
     using System.Threading.Tasks;
     using Android.Gms.Maps;
     using Android.Gms.Maps.Model;
@@ -92,7 +93,7 @@ namespace Zebble.Plugin.Renderer
                     var image = await provider.Result() as Android.Graphics.Bitmap;
                     markerOptions.SetIcon(BitmapDescriptorFactory.FromBitmap(image));
                 }
-                Map.AddMarker(markerOptions);
+                annotation.Id = Map.AddMarker(markerOptions).Id;
 
                 await Task.CompletedTask;
             });
@@ -168,19 +169,16 @@ namespace Zebble.Plugin.Renderer
             map.CameraChange += Map_CameraChange;
             map.InfoWindowClick += (s, e) =>
             {
-                foreach (var annotation in View.Annotations)
+                View.Annotations.FirstOrDefault(a => a.Id == e.Marker.Id)?.Tapped?.Raise(new Map.Annotation
                 {
-                    annotation.Tapped.Raise(new Map.Annotation
-                    {
-                        Draggable = e.Marker.Draggable,
-                        Flat = e.Marker.Flat,
-                        Id = e.Marker.Id,
-                        Location = new Services.GeoLocation(e.Marker.Position.Latitude, e.Marker.Position.Longitude),
-                        Title = e.Marker.Title,
-                        Visible = e.Marker.Visible,
-                        Native = e.Marker
-                    });
-                }
+                    Draggable = e.Marker.Draggable,
+                    Flat = e.Marker.Flat,
+                    Id = e.Marker.Id,
+                    Location = new GeoLocation(e.Marker.Position.Latitude, e.Marker.Position.Longitude),
+                    Title = e.Marker.Title,
+                    Visible = e.Marker.Visible,
+                    Native = e.Marker
+                });
             };
 
             var cameraUpdate = CameraUpdateFactory.NewLatLngZoom(View.Center.Render(), View.ZoomLevel);
