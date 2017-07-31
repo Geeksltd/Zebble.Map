@@ -85,9 +85,8 @@
       <HintPath>..\packages\Xamarin.GooglePlayServices.Tasks.42.1021.1\lib\MonoAndroid70\Xamarin.GooglePlayServices.Tasks.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Zebble.Android">
-      <HintPath>..\packages\Zebble.4.0.249\lib\MonoAndroid10\Zebble.Android.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Zebble.Android, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Zebble.4.0.253\lib\MonoAndroid10\Zebble.Android.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
