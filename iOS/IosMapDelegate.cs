@@ -1,5 +1,6 @@
 ﻿namespace Zebble.Plugin
 {
+    using System;
     using System.Linq;
     using MapKit;
     using ObjCRuntime;
@@ -24,6 +25,23 @@
             pin.Annotation = annotation;
             AttachGestureToPin(pin, annotation);
 
+            var pinImage = GetPinImage(annotation);
+            if (pinImage.HasValue())
+            {
+                try
+                {
+                    var provider = Services.ImageService.GetImageProvider(pinImage, new Size(48, 92), Stretch.Fit);
+                    Device.UIThread.RunAction(async () => pin.Image = await provider.Result() as UIImage);
+                }
+                catch (Exception ex)
+                {
+                    Device.Log.Error("An error happened loading annotation pin image:");
+                    Device.Log.Error(ex.Message);
+                    Device.Log.Message(ex.StackTrace);
+                }
+            }
+
+            Device.Log.Warning(pin);
             return pin;
         }
 
@@ -56,6 +74,17 @@
 
             var pin = Map.Annotations.FirstOrDefault(a => a.Native == annotation);
             if (pin != null) pin.Tapped.RaiseOn(Device.ThreadPool, pin);
+        }
+
+        string GetPinImage(IMKAnnotation nativeAnnotation)
+        {
+            var annotation = Runtime.GetNSObject(nativeAnnotation.Handle);
+            if (annotation != null)
+            {
+                var pin = Map.Annotations.FirstOrDefault(a => a.Native == annotation);
+                if (pin != null) return pin.IconPath;
+            }
+            return null;
         }
     }
 }
