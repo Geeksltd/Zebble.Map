@@ -2,6 +2,7 @@
 {
     using System;
     using System.Linq;
+    using System.Threading.Tasks;
     using MapKit;
     using ObjCRuntime;
     using UIKit;
@@ -31,7 +32,16 @@
                 try
                 {
                     var provider = Services.ImageService.GetImageProvider(pinIcon.IconPath, new Size(pinIcon.Width, pinIcon.Height), Stretch.Fit);
-                    Device.UIThread.RunAction(async () => pin.Image = await provider.Result() as UIImage);
+                    Device.UIThread.Run(async () =>
+                    {
+                        var image = await provider.Result() as UIImage;
+
+                        for (var ensureOverridesDefaultImage = 4; ensureOverridesDefaultImage > 0; ensureOverridesDefaultImage--)
+                        {
+                            pin.Image = image;
+                            await Task.Delay(Animation.OneFrame);
+                        }
+                    });
                 }
                 catch (Exception ex)
                 {
