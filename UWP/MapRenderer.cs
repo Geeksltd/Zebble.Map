@@ -1,4 +1,4 @@
-namespace Zebble.Plugin.Renderer
+﻿namespace Zebble.Plugin.Renderer
 {
     using System;
     using System.ComponentModel;
@@ -143,10 +143,11 @@ namespace Zebble.Plugin.Renderer
 
                 annotation.Native = poi;
 
-                if (annotation.IconPath.HasValue())
+                if (annotation.Pin.IconPath.HasValue())
                 {
-                    var storageFile = await Device.IO.File(annotation.IconPath).ToStorageFile();
-                    poi.Image = RandomAccessStreamReference.CreateFromFile(storageFile);
+                    var provider = ImageService.GetImageProvider(annotation.Pin.IconPath, new Size(annotation.Pin.Width, annotation.Pin.Height), Stretch.Fit);
+                    var image = await provider.Result() as Windows.UI.Xaml.Media.Imaging.BitmapImage;
+                    poi.Image = RandomAccessStreamReference.CreateFromUri(image.UriSour‌​ce);
                 }
 
                 Result.MapElements.Add(poi);

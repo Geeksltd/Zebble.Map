@@ -87,9 +87,9 @@ namespace Zebble.Plugin.Renderer
                 markerOptions.SetTitle(annotation.Title);
                 markerOptions.SetSnippet(annotation.Content);
                 if (annotation.Flat) markerOptions.Flat(annotation.Flat);
-                if (annotation.IconPath.HasValue())
+                if (annotation.Pin.IconPath.HasValue())
                 {
-                    var provider = Services.ImageService.GetImageProvider(annotation.IconPath, new Size(48, 92), Stretch.Fit);
+                    var provider = ImageService.GetImageProvider(annotation.Pin.IconPath, new Size(annotation.Pin.Width, annotation.Pin.Height), Stretch.Fit);
                     var image = await provider.Result() as Android.Graphics.Bitmap;
                     markerOptions.SetIcon(BitmapDescriptorFactory.FromBitmap(image));
                 }
