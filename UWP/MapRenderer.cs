@@ -145,9 +145,9 @@
 
                 if (annotation.Pin.IconPath.HasValue())
                 {
-                    var provider = ImageService.GetImageProvider(annotation.Pin.IconPath, new Size(annotation.Pin.Width, annotation.Pin.Height), Stretch.Fit);
-                    var image = await provider.Result() as Windows.UI.Xaml.Media.Imaging.BitmapImage;
-                    poi.Image = RandomAccessStreamReference.CreateFromUri(image.UriSour‌​ce);
+                    //TODO: set the width and height of pin if possible
+                    var storageFile = await Device.IO.File(annotation.Pin.IconPath).ToStorageFile();
+                    poi.Image = RandomAccessStreamReference.CreateFromFile(storageFile);
                 }
 
                 Result.MapElements.Add(poi);

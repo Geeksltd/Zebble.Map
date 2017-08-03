@@ -35,7 +35,6 @@
                     Device.UIThread.Run(async () =>
                     {
                         var image = await provider.Result() as UIImage;
-
                         for (var ensureOverridesDefaultImage = 4; ensureOverridesDefaultImage > 0; ensureOverridesDefaultImage--)
                         {
                             pin.Image = image;
@@ -50,8 +49,6 @@
                     Device.Log.Message(ex.StackTrace);
                 }
             }
-
-            Device.Log.Warning(pin);
             return pin;
         }
 
