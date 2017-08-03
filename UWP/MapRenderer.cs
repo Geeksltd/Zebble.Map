@@ -132,26 +132,38 @@
 
             foreach (var annotation in View.Annotations)
             {
-                var poi = new MapIcon
+                try
                 {
-                    Location = annotation.Location.Render(),
-                    NormalizedAnchorPoint = new Windows.Foundation.Point(0.5, 1),
-                    Title = annotation.Title,
-                    Visible = annotation.Visible,
-                    ZIndex = 0
-                };
-
-                annotation.Native = poi;
-
-                if (annotation.Pin.IconPath.HasValue())
-                {
-                    var provider = ImageService.GetImageProvider(annotation.Pin.IconPath, new Size(annotation.Pin.Width, annotation.Pin.Height), Stretch.Fit);
-                    var image = await provider.Result() as Windows.UI.Xaml.Media.Imaging.BitmapImage;
-                    poi.Image = RandomAccessStreamReference.CreateFromUri(image.UriSour‌​ce);
+                    await Render(annotation);
                 }
-
-                Result.MapElements.Add(poi);
+                catch (Exception ex)
+                {
+                    Device.Log.Error("Failed to render the annotation: " + annotation + Environment.NewLine + Environment.NewLine +
+                        ex.Message);
+                }
             }
+        }
+
+        async Task Render(Map.Annotation annotation)
+        {
+            var poi = new MapIcon
+            {
+                Location = annotation.Location.Render(),
+                NormalizedAnchorPoint = new Windows.Foundation.Point(0.5, 1),
+                Title = annotation.Title,
+                Visible = annotation.Visible,
+                ZIndex = 0
+            };
+
+            annotation.Native = poi;
+
+            if (annotation.Pin.IconPath.HasValue())
+            {
+                var provider = await annotation.Pin.GetProvider();
+                poi.Image = RandomAccessStreamReference.CreateFromFile(await provider.File.ToStorageFile());
+            }
+
+            Result.MapElements.Add(poi);
         }
 
         public void Dispose() => Result = null;

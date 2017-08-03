@@ -117,24 +117,5 @@
             AnnotationsChanged?.Dispose();
             base.Dispose();
         }
-
-        public class Annotation
-        {
-            public string Title, SubTitle, Id, Content;
-            public bool Draggable, Flat, Visible = true;
-
-            public GeoLocation Location = new GeoLocation();
-            public Icon Pin = new Icon();
-
-            public AsyncEvent<Annotation> Tapped = new AsyncEvent<Annotation>();
-
-            public object Native { get; internal set; }
-
-            public class Icon
-            {
-                public string IconPath;
-                public float Width = 48, Height = 92;
-            }
-        }
     }
 }

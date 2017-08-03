@@ -19,9 +19,8 @@
             if (Runtime.GetNSObject(annotation.Handle) is MKUserLocation userLocationAnnotation)
                 return default(MKAnnotationView);
 
-            var pin = (MKPinAnnotationView)mapView.DequeueReusableAnnotation("defaultPin");
-            if (pin == null)
-                pin = new MKPinAnnotationView(annotation, "defaultPin") { CanShowCallout = true };
+            var pin = (MKPinAnnotationView)mapView.DequeueReusableAnnotation("defaultPin")
+                ?? new MKPinAnnotationView(annotation, "defaultPin") { CanShowCallout = true };
 
             pin.Annotation = annotation;
             AttachGestureToPin(pin, annotation);
@@ -31,9 +30,9 @@
             {
                 try
                 {
-                    var provider = Services.ImageService.GetImageProvider(pinIcon.IconPath, new Size(pinIcon.Width, pinIcon.Height), Stretch.Fit);
                     Device.UIThread.Run(async () =>
                     {
+                        var provider = await pinIcon.GetProvider();
                         var image = await provider.Result() as UIImage;
 
                         for (var ensureOverridesDefaultImage = 4; ensureOverridesDefaultImage > 0; ensureOverridesDefaultImage--)
@@ -51,7 +50,6 @@
                 }
             }
 
-            Device.Log.Warning(pin);
             return pin;
         }
 
