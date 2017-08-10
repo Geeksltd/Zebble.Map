@@ -66,9 +66,9 @@
             {
                 var annotation = View.Annotations.FirstOrDefault(a => a.Native == marker);
                 if (annotation != null)
-                    annotation.Tapped.Raise(annotation);
+                    annotation.Tapped.RaiseOn(Device.ThreadPool);
                 else
-                    throw new ArgumentOutOfRangeException("ev", "A map element tapped which does not have any aanotation.");
+                    throw new ArgumentOutOfRangeException("ev", "A map element tapped which does not have any annotation.");
             }
         }
 
@@ -150,18 +150,27 @@
             {
                 Location = annotation.Location.Render(),
                 NormalizedAnchorPoint = new Windows.Foundation.Point(0.5, 1),
-                Title = annotation.Title,
-                Visible = annotation.Visible,
+                Title = annotation.Title.OrEmpty(),
+                Visible = true,
                 ZIndex = 0
             };
 
             annotation.Native = poi;
 
-            if (annotation.Pin.IconPath.HasValue())
+            if (annotation.IconPath.HasValue())
             {
-                var provider = await annotation.Pin.GetProvider();
-                poi.Image = RandomAccessStreamReference.CreateFromFile(await provider.File.ToStorageFile());
+                var provider = await annotation.GetPinImageProvider();
+                var file = await provider.GetExactSizedFile();
+                poi.Image = RandomAccessStreamReference.CreateFromFile(await file.ToStorageFile());
+
             }
+
+            if (annotation.Content.HasValue())
+                annotation.Tapped.Handle(async () =>
+                {
+                    if (annotation.Content.HasValue())
+                        await Alert.Show(annotation.Content);
+                });
 
             Result.MapElements.Add(poi);
         }

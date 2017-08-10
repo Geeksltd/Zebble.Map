@@ -25,17 +25,19 @@
             pin.Annotation = annotation;
             AttachGestureToPin(pin, annotation);
 
-            var pinIcon = GetPin(annotation);
-            if (pinIcon != null && pinIcon.IconPath.HasValue())
+            var view = (annotation as BasicMapAnnotation)?.View;
+            if (view.IconPath.HasValue())
             {
                 try
                 {
                     Device.UIThread.Run(async () =>
                     {
-                        var provider = await pinIcon.GetProvider();
+                        var provider = await view.GetPinImageProvider();
                         var image = await provider.Result() as UIImage;
 
-                        for (var ensureOverridesDefaultImage = 4; ensureOverridesDefaultImage > 0; ensureOverridesDefaultImage--)
+                        for (var ensureOverridesDefaultImage = 4;
+                        ensureOverridesDefaultImage > 0;
+                        ensureOverridesDefaultImage--)
                         {
                             pin.Image = image;
                             await Task.Delay(Animation.OneFrame);
@@ -81,18 +83,7 @@
             if (annotation == null) return;
 
             var pin = Map.Annotations.FirstOrDefault(a => a.Native == annotation);
-            if (pin != null) pin.Tapped.RaiseOn(Device.ThreadPool, pin);
-        }
-
-        Map.Annotation.Icon GetPin(IMKAnnotation nativeAnnotation)
-        {
-            var nativeAnnotationObject = Runtime.GetNSObject(nativeAnnotation.Handle);
-            if (nativeAnnotationObject != null)
-            {
-                var annotation = Map.Annotations.FirstOrDefault(a => a.Native == nativeAnnotationObject);
-                if (annotation != null) return annotation.Pin;
-            }
-            return null;
+            if (pin != null) pin.Tapped.RaiseOn(Device.ThreadPool);
         }
     }
 }

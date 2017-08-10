@@ -9,7 +9,7 @@
     <Import_RootNamespace>Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)Map.Annotation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Annotation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Map.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Map.Distance.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Map.Span.cs" />

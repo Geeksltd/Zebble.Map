@@ -86,11 +86,12 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="Zebble.Android, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Zebble.4.0.267\lib\MonoAndroid10\Zebble.Android.dll</HintPath>
+      <HintPath>..\packages\Zebble.4.0.278\lib\MonoAndroid10\Zebble.Android.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <Compile Include="ANDROID.Map.cs" />
     <Compile Include="MapRenderer.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -72,23 +72,14 @@ namespace Zebble.Plugin.Renderer
         void UpdateAnnotations()
         {
             var toRemove = Result.Annotations.Cast<BasicMapAnnotation>()
-                .Except(x => View.Annotations.Contains(x.Info)).ToArray();
+                .Except(x => View.Annotations.Contains(x.View)).ToArray();
             Result.RemoveAnnotations(toRemove);
 
             foreach (var t in View.Annotations)
             {
-                if (Result.Annotations.Cast<BasicMapAnnotation>().None(x => x.Info == t))
-                    Result.AddAnnotation(Render(t));
+                if (Result.Annotations.Cast<BasicMapAnnotation>().None(x => x.View == t))
+                    Result.AddAnnotation(new BasicMapAnnotation(t));
             }
-        }
-
-        BasicMapAnnotation Render(Annotation info)
-        {
-            var coord = new CLLocationCoordinate2D(info.Location.Latitude, info.Location.Longitude);
-            var result = new BasicMapAnnotation(coord, info.Title, info.SubTitle, info.Content) { Info = info };
-            info.Native = result;
-
-            return result;
         }
 
         void MoveToRegion()

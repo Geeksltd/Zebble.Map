@@ -2,35 +2,32 @@ namespace Zebble.Plugin
 {
     using CoreLocation;
     using MapKit;
-    using static Zebble.Plugin.Map;
 
     public class BasicMapAnnotation : MKAnnotation
     {
-        public Annotation Info;
+        public Map.Annotation View { get; private set; }
         CLLocationCoordinate2D coordinate;
-        string title, subtitle, content;
 
-        public BasicMapAnnotation(CLLocationCoordinate2D coordinate, string title, string subtitle, string content)
+        public BasicMapAnnotation(Map.Annotation view)
         {
-            this.coordinate = coordinate;
-            this.title = title;
-            this.subtitle = subtitle;
-            this.content = content;
+            View = view;
+            View.Native = this;
+            coordinate = new CLLocationCoordinate2D(view.Location.Latitude, view.Location.Longitude);
         }
 
         public override CLLocationCoordinate2D Coordinate => coordinate;
 
         public override void SetCoordinate(CLLocationCoordinate2D value) => coordinate = value;
 
-        public override string Title => title;
+        public override string Title => View.Title;
 
-        public override string Subtitle => subtitle;
+        public override string Subtitle => View.SubTitle;
 
-        public override string Description => content;
+        public override string Description => View.Content;
 
         protected override void Dispose(bool disposing)
         {
-            Info = null;
+            View = null;
             base.Dispose(disposing);
         }
     }

@@ -12,7 +12,8 @@
         public static double DefaultLatitude = 51.5074;
         public static double DefaultLongitude = -0.1278;
 
-        public readonly List<Annotation> Annotations = new List<Annotation>();
+        List<Annotation> annotations = new List<Annotation>();
+        public IEnumerable<Annotation> Annotations => annotations;
 
         public readonly AsyncEvent ZoomChanged = new AsyncEvent();
         public readonly AsyncEvent ZoomEnabledChanged = new AsyncEvent();
@@ -97,15 +98,21 @@
 
         public Task Add(params Annotation[] annotations)
         {
-            Annotations.AddRange(annotations); AnnotationsChanged.Raise();
+            this.annotations.AddRange(annotations);
+            AnnotationsChanged.Raise();
             return Task.CompletedTask;
         }
 
         public Task Remove(params Annotation[] annotations)
         {
-            Annotations.Remove(annotations);
+            this.annotations.Remove(annotations);
             AnnotationsChanged.Raise();
             return Task.CompletedTask;
+        }
+
+        public async Task ClearAnnotations()
+        {
+            foreach (var a in annotations.ToArray()) await Remove(a);
         }
 
         public override void Dispose()
@@ -115,6 +122,9 @@
             ZoomEnabledChanged?.Dispose();
             ScrollEnabledChanged?.Dispose();
             AnnotationsChanged?.Dispose();
+
+            annotations.Do(x => x.Dispose());
+            annotations.Clear();
             base.Dispose();
         }
     }

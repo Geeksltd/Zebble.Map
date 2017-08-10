@@ -84,15 +84,16 @@ namespace Zebble.Plugin.Renderer
             {
                 var markerOptions = new MarkerOptions();
                 markerOptions.SetPosition(annotation.Location.Render());
-                markerOptions.SetTitle(annotation.Title);
-                markerOptions.SetSnippet(annotation.Content);
+                markerOptions.SetTitle(annotation.Title.OrEmpty());
+                markerOptions.SetSnippet(annotation.Content.OrEmpty());
                 if (annotation.Flat) markerOptions.Flat(annotation.Flat);
-                if (annotation.Pin.IconPath.HasValue())
+                if (annotation.IconPath.HasValue())
                 {
-                    var provider =await  annotation.Pin.GetProvider();
+                    var provider = await annotation.GetPinImageProvider();
                     var image = await provider.Result() as Android.Graphics.Bitmap;
                     markerOptions.SetIcon(BitmapDescriptorFactory.FromBitmap(image));
                 }
+
                 annotation.Id = Map.AddMarker(markerOptions).Id;
 
                 await Task.CompletedTask;
@@ -169,16 +170,10 @@ namespace Zebble.Plugin.Renderer
             map.CameraChange += Map_CameraChange;
             map.InfoWindowClick += (s, e) =>
             {
-                View.Annotations.FirstOrDefault(a => a.Id == e.Marker.Id)?.Tapped?.Raise(new Map.Annotation
-                {
-                    Draggable = e.Marker.Draggable,
-                    Flat = e.Marker.Flat,
-                    Id = e.Marker.Id,
-                    Location = new GeoLocation(e.Marker.Position.Latitude, e.Marker.Position.Longitude),
-                    Title = e.Marker.Title,
-                    Visible = e.Marker.Visible,
-                    Native = e.Marker
-                });
+                var annotation = View.Annotations.FirstOrDefault(a => a.Id == e.Marker.Id);
+                if (annotation == null)
+                    Device.Log.Error("No map annotation was found for ID: " + e.Marker.Id);
+                else annotation.Tapped.RaiseOn(Device.ThreadPool);
             };
 
             var cameraUpdate = CameraUpdateFactory.NewLatLngZoom(View.Center.Render(), View.ZoomLevel);
