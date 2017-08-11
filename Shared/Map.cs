@@ -18,7 +18,7 @@ namespace Zebble.Plugin
         internal readonly AsyncEvent ZoomableChanged = new AsyncEvent();
         internal readonly AsyncEvent ShowZoomControlsChanged = new AsyncEvent();
         internal readonly AsyncEvent RotatableChanged = new AsyncEvent();
-        internal readonly AsyncEvent ScrollableChanged = new AsyncEvent();
+        internal readonly AsyncEvent PannableChanged = new AsyncEvent();
         internal readonly AsyncEvent AnnotationsChanged = new AsyncEvent();
         public readonly AsyncEvent<GeoRegion> UserChanged = new AsyncEvent<GeoRegion>();
         internal Func<Task> NativeRefreshControl;
@@ -27,8 +27,7 @@ namespace Zebble.Plugin
             get => center;
             set
             {
-                if (center == value)
-                    return;
+                if (center == value) return;
                 center = value;
                 if (IsAlreadyRendered())
                 {
@@ -46,8 +45,7 @@ namespace Zebble.Plugin
             get => zoomLevel;
             set
             {
-                if (zoomLevel == value)
-                    return;
+                if (zoomLevel == value) return;
                 zoomLevel = value;
                 ApiZoomChanged.Raise();
             }
@@ -59,8 +57,7 @@ namespace Zebble.Plugin
             get => zoomable;
             set
             {
-                if (zoomable == value)
-                    return;
+                if (zoomable == value) return;
                 zoomable = value;
                 ZoomableChanged.Raise();
             }
@@ -92,24 +89,19 @@ namespace Zebble.Plugin
             }
         }
 
-        bool scrollable = true;
-        public bool Scrollable
+        bool pannable = true;
+        public bool Pannable
         {
-            get => scrollable;
+            get => pannable;
             set
             {
-                if (scrollable == value)
-                    return;
-                scrollable = value;
-                ScrollableChanged.Raise();
+                if (pannable == value) return;
+                pannable = value;
+                PannableChanged.Raise();
             }
         }
 
-        public Span VisibleRegion
-        {
-            get;
-            internal set;
-        }
+        public Span VisibleRegion { get; internal set; }
 
         internal async Task<GeoLocation> GetCenter()
         {
@@ -156,7 +148,7 @@ namespace Zebble.Plugin
             UserChanged?.Dispose();
             ApiZoomChanged?.Dispose();
             ZoomableChanged?.Dispose();
-            ScrollableChanged?.Dispose();
+            PannableChanged?.Dispose();
             AnnotationsChanged?.Dispose();
             annotations.Do(x => x.Dispose());
             annotations.Clear();

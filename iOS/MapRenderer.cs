@@ -48,8 +48,8 @@ namespace Zebble.Plugin.Renderer
         async Task GenerateMap()
         {
             if (View != null) Result.Frame = View.GetFrame();
-            Result.ScrollEnabled = View.Scrollable;
-
+            Result.ScrollEnabled = View.Pannable;
+            Result.RotateEnabled = View.Rotatable;
             //ShowsUserLocation = View.ShowsUserLocation;
             Result.CenterCoordinate = (await View.GetCenter()).Render();
 
@@ -58,7 +58,8 @@ namespace Zebble.Plugin.Renderer
             UpdateAnnotations();
             View.ZoomableChanged.HandleActionOn(Device.UIThread, ZoomControllingChanged);
             View.ApiZoomChanged.HandleOn(Device.UIThread, () => MoveToRegion());
-            View.ScrollableChanged.HandleOn(Device.UIThread, () => Result.ScrollEnabled = View.Scrollable);
+            View.PannableChanged.HandleOn(Device.UIThread, () => Result.ScrollEnabled = View.Pannable);
+            View.RotatableChanged.HandleOn(Device.UIThread, () => Result.RotateEnabled = View.Rotatable);
             View.AnnotationsChanged.HandleActionOn(Device.UIThread, UpdateAnnotations);
 
             using (var mapDelegate = new IosMapDelegate(View))

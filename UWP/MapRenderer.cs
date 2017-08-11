@@ -37,6 +37,7 @@
 
             ZoomEnabledChanged();
             ScrollEnabledChanged();
+            RotatableChanged();
             await MoveToRegion();
             await UpdateAnnotations();
 
@@ -108,7 +109,8 @@
         {
             View.ApiZoomChanged.HandleOn(Device.UIThread, ZoomChanged);
             View.ZoomableChanged.HandleOn(Device.UIThread, () => ZoomEnabledChanged());
-            View.ScrollableChanged.HandleOn(Device.UIThread, () => ScrollEnabledChanged());
+            View.PannableChanged.HandleOn(Device.UIThread, () => ScrollEnabledChanged());
+            View.RotatableChanged.HandleOn(Device.UIThread, () => RotatableChanged());
             View.AnnotationsChanged.HandleOn(Device.UIThread, async () => await UpdateAnnotations());
         }
 
@@ -124,8 +126,14 @@
 
         void ScrollEnabledChanged()
         {
-            if (View.Scrollable) Result.PanInteractionMode = MapPanInteractionMode.Auto;
+            if (View.Pannable) Result.PanInteractionMode = MapPanInteractionMode.Auto;
             else Result.PanInteractionMode = MapPanInteractionMode.Disabled;
+        }
+
+        void RotatableChanged()
+        {
+            if (View.Rotatable) Result.RotateInteractionMode = MapInteractionMode.GestureAndControl;
+            else Result.RotateInteractionMode = MapInteractionMode.Disabled;
         }
 
         async Task UpdateAnnotations()

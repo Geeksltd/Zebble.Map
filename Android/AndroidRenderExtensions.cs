@@ -13,7 +13,7 @@ namespace Zebble.Plugin.Renderer
 
         public static GoogleMapOptions RenderOptions(this Map map)
         {
-            return new GoogleMapOptions().InvokeMapType(GoogleMap.MapTypeNormal).InvokeZoomControlsEnabled(map.ShowZoomControls).InvokeZoomGesturesEnabled(map.Zoomable).InvokeScrollGesturesEnabled(map.Scrollable).InvokeRotateGesturesEnabled(map.Rotatable);
+            return new GoogleMapOptions().InvokeMapType(GoogleMap.MapTypeNormal).InvokeZoomControlsEnabled(map.ShowZoomControls).InvokeZoomGesturesEnabled(map.Zoomable).InvokeScrollGesturesEnabled(map.Pannable).InvokeRotateGesturesEnabled(map.Rotatable);
         }
 
         public static GeoLocation ToZebble(this LatLng point) => new GeoLocation(point.Latitude, point.Longitude);

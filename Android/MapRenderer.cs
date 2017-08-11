@@ -22,8 +22,8 @@ namespace Zebble.Plugin.Renderer
             View = (Map)renderer.View;
             View.ShowZoomControlsChanged.HandleOn(Device.UIThread, () => Map.UiSettings.ZoomControlsEnabled = View.ShowZoomControls);
             View.ZoomableChanged.HandleOn(Device.UIThread, () => Map.UiSettings.ZoomControlsEnabled = View.Zoomable);
-            View.ScrollableChanged.HandleOn(Device.UIThread, () => Map.UiSettings.ScrollGesturesEnabled = View.Scrollable);
-            View.ScrollableChanged.HandleOn(Device.UIThread, () => Map.UiSettings.RotateGesturesEnabled = View.Rotatable);
+            View.PannableChanged.HandleOn(Device.UIThread, () => Map.UiSettings.ScrollGesturesEnabled = View.Pannable);
+            View.PannableChanged.HandleOn(Device.UIThread, () => Map.UiSettings.RotateGesturesEnabled = View.Rotatable);
             View.ApiZoomChanged.HandleOn(Device.UIThread, () => Map.AnimateCamera(CameraUpdateFactory.ZoomBy(View.ZoomLevel)));
             View.AnnotationsChanged.HandleOn(Device.UIThread, UpdateAnnotations);
             View.NativeRefreshControl = MoveToRegion;
@@ -116,7 +116,7 @@ namespace Zebble.Plugin.Renderer
             Map = await source.Task;
             Map.UiSettings.ZoomControlsEnabled = View.ShowZoomControls;
             Map.UiSettings.ZoomGesturesEnabled = View.Zoomable;
-            Map.UiSettings.ScrollGesturesEnabled = View.Scrollable;
+            Map.UiSettings.ScrollGesturesEnabled = View.Pannable;
             Map.UiSettings.RotateGesturesEnabled = View.Rotatable;
             Map.CameraChange += Map_CameraChange;
             Map.MarkerClick += Map_MarkerClick;
