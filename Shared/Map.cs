@@ -39,7 +39,12 @@ namespace Zebble.Plugin
             }
         }
 
-        int zoomLevel;
+        int zoomLevel = 13;
+        bool zoomable = true;
+        bool showZoomControls = false;
+        bool rotatable = true;
+        bool pannable = true;
+
         public int ZoomLevel
         {
             get => zoomLevel;
@@ -51,7 +56,6 @@ namespace Zebble.Plugin
             }
         }
 
-        bool zoomable = true;
         public bool Zoomable
         {
             get => zoomable;
@@ -63,7 +67,6 @@ namespace Zebble.Plugin
             }
         }
 
-        bool showZoomControls = false;
         public bool ShowZoomControls
         {
             get => showZoomControls;
@@ -76,7 +79,6 @@ namespace Zebble.Plugin
             }
         }
 
-        bool rotatable = true;
         public bool Rotatable
         {
             get => rotatable;
@@ -89,7 +91,6 @@ namespace Zebble.Plugin
             }
         }
 
-        bool pannable = true;
         public bool Pannable
         {
             get => pannable;
