@@ -11,8 +11,19 @@
         {
             public readonly AsyncEvent Tapped = new AsyncEvent();
 
+            internal void RaiseTapped()
+            {
+                if (Content.HasValue()) return;
+                Tapped.RaiseOn(Device.ThreadPool);
+            }
+
             public string Title { get; set; } = string.Empty;
+
+            /// <summary>
+            /// If specified, it will be displayed when the pin is clicked, but then the Tapped event will not be raised anymore.
+            /// </summary>
             public string Content { get; set; } = string.Empty;
+
             public GeoLocation Location { get; set; } = new GeoLocation();
             public object Native { get; internal set; }
 

@@ -57,7 +57,7 @@ namespace Zebble.Plugin.Renderer
             MoveToRegion();
             UpdateAnnotations();
             View.ZoomEnabledChanged.HandleActionOn(Device.UIThread, ZoomControllingChanged);
-            View.ZoomChanged.HandleOn(Device.UIThread, () => MoveToRegion());
+            View.ApiZoomChanged.HandleOn(Device.UIThread, () => MoveToRegion());
             View.ScrollEnabledChanged.HandleOn(Device.UIThread, () => Result.ScrollEnabled = View.ScrollEnabled);
             View.AnnotationsChanged.HandleActionOn(Device.UIThread, UpdateAnnotations);
 

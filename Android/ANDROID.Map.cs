@@ -1,19 +1,22 @@
 ﻿namespace Zebble.Plugin
 {
-    using System;
-
     partial class Map
     {
         partial class Annotation
         {
-            internal string Id;
+            internal bool Flat { get; set; }
+        }
+    }
 
-            public bool Flat { get; set; }
+    internal class AnnotationRef : Java.Lang.Object
+    {
+        internal Map.Annotation Annotation;
+        public AnnotationRef(Map.Annotation annotation) => Annotation = annotation;
 
-            public Annotation()
-            {
-                Id = Guid.NewGuid().ToString();
-            }
+        protected override void Dispose(bool disposing)
+        {
+            Annotation = null;
+            base.Dispose(disposing);
         }
     }
 }

@@ -27,6 +27,7 @@
     <DefineConstants>TRACE;DEBUG;ANDROID</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>..\lib\Zebble.Map.Android.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -87,11 +88,14 @@
     </Reference>
     <Reference Include="Zebble.Android, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Zebble.4.0.278\lib\MonoAndroid10\Zebble.Android.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
     <Compile Include="ANDROID.Map.cs" />
+    <Compile Include="AndroidRenderExtensions.cs" />
+    <Compile Include="MapReadyCallBack.cs" />
     <Compile Include="MapRenderer.cs" />
   </ItemGroup>
   <ItemGroup>

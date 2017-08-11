@@ -66,7 +66,11 @@
             {
                 var annotation = View.Annotations.FirstOrDefault(a => a.Native == marker);
                 if (annotation != null)
-                    annotation.Tapped.RaiseOn(Device.ThreadPool);
+                {
+                    if (annotation.Content.HasValue())
+                        Alert.Show(annotation.Content).RunInParallel();
+                    else annotation.RaiseTapped();
+                }
                 else
                     throw new ArgumentOutOfRangeException("ev", "A map element tapped which does not have any annotation.");
             }
@@ -104,7 +108,7 @@
 
         void HandleEvents()
         {
-            View.ZoomChanged.HandleOn(Device.UIThread, ZoomChanged);
+            View.ApiZoomChanged.HandleOn(Device.UIThread, ZoomChanged);
             View.ZoomEnabledChanged.HandleOn(Device.UIThread, () => ZoomEnabledChanged());
             View.ScrollEnabledChanged.HandleOn(Device.UIThread, () => ScrollEnabledChanged());
             View.AnnotationsChanged.HandleOn(Device.UIThread, async () => await UpdateAnnotations());
@@ -162,15 +166,7 @@
                 var provider = await annotation.GetPinImageProvider();
                 var file = await provider.GetExactSizedFile();
                 poi.Image = RandomAccessStreamReference.CreateFromFile(await file.ToStorageFile());
-
             }
-
-            if (annotation.Content.HasValue())
-                annotation.Tapped.Handle(async () =>
-                {
-                    if (annotation.Content.HasValue())
-                        await Alert.Show(annotation.Content);
-                });
 
             Result.MapElements.Add(poi);
         }

@@ -1,7 +1,6 @@
 ﻿namespace Zebble.Plugin
 {
     using System;
-    using System.Linq;
     using System.Threading.Tasks;
     using MapKit;
     using ObjCRuntime;
@@ -10,7 +9,6 @@
     internal class IosMapDelegate : MKMapViewDelegate
     {
         Map Map;
-        object LastTouchedView;
 
         internal IosMapDelegate(Map map) => Map = map;
 
@@ -63,11 +61,9 @@
                 foreach (var r in recognizers)
                     mapPin.RemoveGestureRecognizer(r);
 
-            void action(UITapGestureRecognizer g) => OnClick(annotation);
-
-            var recognizer = new UITapGestureRecognizer(action)
+            var recognizer = new UITapGestureRecognizer(g => OnClick(annotation))
             {
-                ShouldReceiveTouch = (gestureRecognizer, touch) => { LastTouchedView = touch.View; return true; }
+                ShouldReceiveTouch = (gestureRecognizer, touch) => true
             };
 
             mapPin.AddGestureRecognizer(recognizer);
@@ -75,15 +71,9 @@
 
         void OnClick(IMKAnnotation nativeAnnotation)
         {
-            if (LastTouchedView is MKAnnotationView)
-                // Ignore it as it means the callout was shown (which is another view).
-                return;
-
-            var annotation = Runtime.GetNSObject(nativeAnnotation.Handle);
-            if (annotation == null) return;
-
-            var pin = Map.Annotations.FirstOrDefault(a => a.Native == annotation);
-            if (pin != null) pin.Tapped.RaiseOn(Device.ThreadPool);
+            var annotation = (nativeAnnotation as BasicMapAnnotation)?.View;
+            if (annotation != null && annotation.Content.LacksValue())
+                annotation.RaiseTapped();
         }
     }
 }

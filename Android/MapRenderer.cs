@@ -2,22 +2,18 @@ namespace Zebble.Plugin.Renderer
 {
     using System;
     using System.ComponentModel;
-    using System.Linq;
     using System.Threading.Tasks;
     using Android.Gms.Maps;
     using Android.Gms.Maps.Model;
-    using Android.Views;
     using Android.Widget;
     using Zebble;
-    using Zebble.Services;
     using static Zebble.Plugin.Map;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public class MapRenderer : INativeRenderer
+    internal class MapRenderer : INativeRenderer
     {
         Map View;
-        FrameLayout Result;
-
+        FrameLayout Container; // The map will be drawn onto this after the page is rendered.
         MapFragment Fragment;
         GoogleMap Map;
         const double DEGREE360 = 360;
@@ -25,45 +21,43 @@ namespace Zebble.Plugin.Renderer
         public async Task<Android.Views.View> Render(Renderer renderer)
         {
             View = (Map)renderer.View;
-            Result = new FrameLayout(Renderer.Context) { Id = Android.Views.View.GenerateViewId() };
 
-            await View.WhenShown(LoadMap);
+            View.ZoomEnabledChanged.HandleOn(Device.UIThread,
+                () => Map.UiSettings.ZoomControlsEnabled = View.ZoomEnable);
 
-            return Result;
+            View.ScrollEnabledChanged.HandleOn(Device.UIThread,
+                () => Map.UiSettings.ScrollGesturesEnabled = View.ScrollEnabled);
+
+            View.ApiZoomChanged.HandleOn(Device.UIThread,
+                () => Map.AnimateCamera(CameraUpdateFactory.ZoomBy(View.ZoomLevel)));
+
+            View.AnnotationsChanged.HandleOn(Device.UIThread, UpdateAnnotations);
+            View.NativeRefreshControl = MoveToRegion;
+
+            Container = new FrameLayout(Renderer.Context) { Id = Android.Views.View.GenerateViewId() };
+
+            await View.WhenShown(() => Device.UIThread.Run(LoadMap));
+            return Container;
         }
 
         Task FixThread() => Task.Delay(Animation.OneFrame);
 
         async Task LoadMap()
         {
-            View.ZoomEnabledChanged.HandleOn(Device.UIThread, () => Map.UiSettings.ZoomControlsEnabled = View.ZoomEnable);
-            View.ScrollEnabledChanged.HandleOn(Device.UIThread, () => Map.UiSettings.ScrollGesturesEnabled = View.ScrollEnabled);
-            View.ZoomChanged.HandleOn(Device.UIThread, CalCulate);
-            View.AnnotationsChanged.HandleOn(Device.UIThread, UpdateAnnotations);
+            await Task.Delay(Animation.OneFrame);
 
-            View.NativeRefreshControl = MoveToRegion;
+            Fragment = CreateFragment(Container, View.RenderOptions());
 
-            var options = new GoogleMapOptions()
-                .InvokeZoomControlsEnabled(View.ShowZoomControls)
-                .InvokeZoomGesturesEnabled(View.ZoomEnable)
-                .InvokeMapType(GoogleMap.MapTypeNormal)
-                .InvokeScrollGesturesEnabled(View.ScrollEnabled)
-                .InvokeRotateGesturesEnabled(enabled: false);
+            await Task.Delay(Animation.OneFrame); // Wait for the fragment to be created.
 
-            await FixThread();
-
-            Fragment = SetUpMap(Result, options);
-
-            await FixThread();
-
-            await Device.UIThread.Run(GetMap);
+            await CreateMap();
 
             Device.UIThread.RunAction(async () => await UpdateAnnotations());
 
             await Task.CompletedTask;
         }
 
-        MapFragment SetUpMap(FrameLayout view, GoogleMapOptions options)
+        MapFragment CreateFragment(FrameLayout view, GoogleMapOptions options)
         {
             var fragment = MapFragment.NewInstance(options);
             var transaction = UIRuntime.CurrentActivity.FragmentManager.BeginTransaction();
@@ -73,14 +67,11 @@ namespace Zebble.Plugin.Renderer
             return fragment;
         }
 
-        void Map_CameraChange(object sender, GoogleMap.CameraChangeEventArgs e)
-        {
-            UpdateVisibleRegion(e.Position.Target);
-        }
+        void Map_CameraChange(object _, GoogleMap.CameraChangeEventArgs args) => UpdateVisibleRegion();
 
-        Task UpdateAnnotations()
+        async Task UpdateAnnotations()
         {
-            return View.Annotations.WhenAll(async annotation =>
+            foreach (var annotation in View.Annotations)
             {
                 var markerOptions = new MarkerOptions();
                 markerOptions.SetPosition(annotation.Location.Render());
@@ -94,23 +85,20 @@ namespace Zebble.Plugin.Renderer
                     markerOptions.SetIcon(BitmapDescriptorFactory.FromBitmap(image));
                 }
 
-                annotation.Id = Map.AddMarker(markerOptions).Id;
-
-                await Task.CompletedTask;
-            });
+                var marker = Map.AddMarker(markerOptions);
+                marker.Tag = new AnnotationRef(annotation);
+            }
         }
 
         async Task MoveToRegion()
         {
-            var map = Map;
-
             var update = CameraUpdateFactory.NewCameraPosition(
                 CameraPosition.FromLatLngZoom((await View.GetCenter()).Render(),
                 View.ZoomLevel));
 
             try
             {
-                Device.UIThread.RunAction(() => map.AnimateCamera(update));
+                Device.UIThread.RunAction(() => Map?.AnimateCamera(update));
             }
             catch (Java.Lang.IllegalStateException exc)
             {
@@ -119,81 +107,61 @@ namespace Zebble.Plugin.Renderer
             }
         }
 
-        Task UpdateVisibleRegion(LatLng _)
+        void UpdateVisibleRegion()
         {
             var map = Map;
-            if (map == null) return Task.CompletedTask;
+            if (map == null) return;
 
             var projection = map.Projection;
             var width = Fragment.View.Width;
             var height = Fragment.View.Height;
-            var topLeft = projection.FromScreenLocation(new global::Android.Graphics.Point(0, 0));
-            var bottomLeft = projection.FromScreenLocation(new global::Android.Graphics.Point(0, height));
-            var bottomRight = projection.FromScreenLocation(new global::Android.Graphics.Point(width, height));
-            View.VisibleRegion = new Span(GetGeoLocation(topLeft), GetGeoLocation(bottomLeft), GetGeoLocation(bottomRight));
-            return Task.CompletedTask;
+            var topLeft = projection.FromScreenLocation(new Android.Graphics.Point(0, 0));
+            var bottomLeft = projection.FromScreenLocation(new Android.Graphics.Point(0, height));
+            var bottomRight = projection.FromScreenLocation(new Android.Graphics.Point(width, height));
+            View.VisibleRegion = new Span(topLeft.ToZebble(), bottomLeft.ToZebble(), bottomRight.ToZebble());
         }
 
-        GeoLocation GetGeoLocation(LatLng point) => new GeoLocation(point.Latitude, point.Longitude);
+        void OnApiZoomChanged() => Map.AnimateCamera(CameraUpdateFactory.ZoomBy(View.ZoomLevel));
 
-        Task CalCulate()
+        async Task CreateMap()
         {
-            var map = Map;
-
-            var cameraUpdate = CameraUpdateFactory.ZoomBy(View.ZoomLevel);
-            map.AnimateCamera(cameraUpdate);
-
-            return Task.CompletedTask;
-        }
-
-        class MapReadyCallBack : Java.Lang.Object, IOnMapReadyCallback
-        {
-            Action<GoogleMap> Action;
-            public MapReadyCallBack(Action<GoogleMap> action) { Action = action; }
-
-            public void OnMapReady(GoogleMap googleMap) => Action(googleMap);
-        }
-
-        public async Task GetMap()
-        {
-            if (Map != null) return;
-
-            await FixThread();
-
             var source = new TaskCompletionSource<GoogleMap>();
             Fragment.GetMapAsync(new MapReadyCallBack(source.SetResult));
 
-            await FixThread();
-            var map = await source.Task;
-            await FixThread();
+            //await FixThread();
+            Map = await source.Task;
+            // await FixThread();
 
-            map.CameraChange += Map_CameraChange;
-            map.InfoWindowClick += (s, e) =>
-            {
-                var annotation = View.Annotations.FirstOrDefault(a => a.Id == e.Marker.Id);
-                if (annotation == null)
-                    Device.Log.Error("No map annotation was found for ID: " + e.Marker.Id);
-                else annotation.Tapped.RaiseOn(Device.ThreadPool);
-            };
+            Map.CameraChange += Map_CameraChange;
+            Map.MarkerClick += Map_MarkerClick;
+            Map.InfoWindowClick += Map_InfoWindowClick;
 
-            var cameraUpdate = CameraUpdateFactory.NewLatLngZoom(View.Center.Render(), View.ZoomLevel);
-            map.AnimateCamera(cameraUpdate);
+            Map.AnimateCamera(CameraUpdateFactory.NewLatLngZoom(View.Center.Render(), View.ZoomLevel));
+        }
 
-            Map = map;
+        void Map_InfoWindowClick(object _, GoogleMap.InfoWindowClickEventArgs e) => RaiseTapped(e.Marker);
+
+        void Map_MarkerClick(object _, GoogleMap.MarkerClickEventArgs e) => RaiseTapped(e.Marker);
+
+        void RaiseTapped(Marker marker)
+        {
+            var annotation = (marker?.Tag as AnnotationRef)?.Annotation;
+            if (annotation == null)
+                Device.Log.Error("No map annotation was found for the tapped annotation!");
+            else annotation.RaiseTapped();
         }
 
         public void Dispose()
         {
+            Map.Perform(m => m.CameraChange -= Map_CameraChange);
+            Map.Perform(m => m.InfoWindowClick -= Map_InfoWindowClick);
+            Map.Perform(m => m.MarkerClick -= Map_MarkerClick);
+            Map = null;
             Fragment?.Dispose();
             Fragment = null;
             View = null;
-            Result?.Dispose();
-            Result = null;
+            Container?.Dispose();
+            Container = null;
         }
-    }
-
-    public static class AndroidRenderExtensions
-    {
-        public static LatLng Render(this IGeoLocation coordinate) => new LatLng(coordinate.Latitude, coordinate.Longitude);
     }
 }

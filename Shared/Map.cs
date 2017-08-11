@@ -12,18 +12,19 @@
         public static double DefaultLatitude = 51.5074;
         public static double DefaultLongitude = -0.1278;
 
+        GeoLocation center;
         List<Annotation> annotations = new List<Annotation>();
         public IEnumerable<Annotation> Annotations => annotations;
 
-        public readonly AsyncEvent ZoomChanged = new AsyncEvent();
-        public readonly AsyncEvent ZoomEnabledChanged = new AsyncEvent();
-        public readonly AsyncEvent ScrollEnabledChanged = new AsyncEvent();
-        public readonly AsyncEvent AnnotationsChanged = new AsyncEvent();
+        internal readonly AsyncEvent ApiZoomChanged = new AsyncEvent();
+        internal readonly AsyncEvent ZoomEnabledChanged = new AsyncEvent();
+        internal readonly AsyncEvent ScrollEnabledChanged = new AsyncEvent();
+        internal readonly AsyncEvent AnnotationsChanged = new AsyncEvent();
+
         public readonly AsyncEvent<GeoRegion> UserChanged = new AsyncEvent<GeoRegion>();
 
         internal Func<Task> NativeRefreshControl;
 
-        GeoLocation center;
         public GeoLocation Center
         {
             get => center;
@@ -52,7 +53,7 @@
                 if (zoomLevel == value) return;
 
                 zoomLevel = value;
-                ZoomChanged.Raise();
+                ApiZoomChanged.Raise();
             }
         }
 
@@ -118,7 +119,7 @@
         public override void Dispose()
         {
             UserChanged?.Dispose();
-            ZoomChanged?.Dispose();
+            ApiZoomChanged?.Dispose();
             ZoomEnabledChanged?.Dispose();
             ScrollEnabledChanged?.Dispose();
             AnnotationsChanged?.Dispose();
