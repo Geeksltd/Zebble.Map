@@ -1,14 +1,8 @@
-﻿namespace Zebble.Plugin.Renderer
+namespace Zebble.Plugin.Renderer
 {
-    using System;
-    using System.ComponentModel;
-    using System.Threading.Tasks;
     using Android.Gms.Maps;
     using Android.Gms.Maps.Model;
-    using Android.Widget;
-    using Zebble;
     using Zebble.Services;
-    using static Zebble.Plugin.Map;
 
     static class AndroidRenderExtensions
     {
@@ -19,12 +13,7 @@
 
         public static GoogleMapOptions RenderOptions(this Map map)
         {
-            return new GoogleMapOptions()
-              .InvokeZoomControlsEnabled(map.ShowZoomControls)
-              .InvokeZoomGesturesEnabled(map.ZoomEnable)
-              .InvokeMapType(GoogleMap.MapTypeNormal)
-              .InvokeScrollGesturesEnabled(map.ScrollEnabled)
-              .InvokeRotateGesturesEnabled(enabled: false);
+            return new GoogleMapOptions().InvokeMapType(GoogleMap.MapTypeNormal).InvokeZoomControlsEnabled(map.ShowZoomControls).InvokeZoomGesturesEnabled(map.Zoomable).InvokeScrollGesturesEnabled(map.Scrollable).InvokeRotateGesturesEnabled(map.Rotatable);
         }
 
         public static GeoLocation ToZebble(this LatLng point) => new GeoLocation(point.Latitude, point.Longitude);

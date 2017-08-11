@@ -67,9 +67,7 @@
                 var annotation = View.Annotations.FirstOrDefault(a => a.Native == marker);
                 if (annotation != null)
                 {
-                    if (annotation.Content.HasValue())
-                        Alert.Show(annotation.Content).RunInParallel();
-                    else annotation.RaiseTapped();
+                    annotation.RaiseTapped();
                 }
                 else
                     throw new ArgumentOutOfRangeException("ev", "A map element tapped which does not have any annotation.");
@@ -109,8 +107,8 @@
         void HandleEvents()
         {
             View.ApiZoomChanged.HandleOn(Device.UIThread, ZoomChanged);
-            View.ZoomEnabledChanged.HandleOn(Device.UIThread, () => ZoomEnabledChanged());
-            View.ScrollEnabledChanged.HandleOn(Device.UIThread, () => ScrollEnabledChanged());
+            View.ZoomableChanged.HandleOn(Device.UIThread, () => ZoomEnabledChanged());
+            View.ScrollableChanged.HandleOn(Device.UIThread, () => ScrollEnabledChanged());
             View.AnnotationsChanged.HandleOn(Device.UIThread, async () => await UpdateAnnotations());
         }
 
@@ -118,15 +116,15 @@
 
         void ZoomEnabledChanged()
         {
-            if (View.ZoomEnable && View.ShowZoomControls) Result.ZoomInteractionMode = MapInteractionMode.GestureAndControl;
-            else if (View.ZoomEnable) Result.ZoomInteractionMode = MapInteractionMode.GestureOnly;
+            if (View.Zoomable && View.ShowZoomControls) Result.ZoomInteractionMode = MapInteractionMode.GestureAndControl;
+            else if (View.Zoomable) Result.ZoomInteractionMode = MapInteractionMode.GestureOnly;
             else if (View.ShowZoomControls) Result.ZoomInteractionMode = MapInteractionMode.ControlOnly;
             else Result.ZoomInteractionMode = MapInteractionMode.Disabled;
         }
 
         void ScrollEnabledChanged()
         {
-            if (View.ScrollEnabled) Result.PanInteractionMode = MapPanInteractionMode.Auto;
+            if (View.Scrollable) Result.PanInteractionMode = MapPanInteractionMode.Auto;
             else Result.PanInteractionMode = MapPanInteractionMode.Disabled;
         }
 

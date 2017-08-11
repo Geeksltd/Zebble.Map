@@ -6,18 +6,18 @@ namespace Zebble.Plugin
         {
             const double MetersPerMile = 1609.344;
             const double MetersPerKilometer = 1000.0;
-
             public Distance(double meters)
             {
                 Meters = meters;
             }
 
-            public double Meters { get; }
+            public double Meters
+            {
+                get;
+            }
 
             public double Miles => Meters / MetersPerMile;
-
             public double Kilometers => Meters / MetersPerKilometer;
-
             public static Distance FromMiles(double miles)
             {
                 if (miles < 0)
@@ -25,6 +25,7 @@ namespace Zebble.Plugin
                     Device.Log.Error("Negative values for distance not supported");
                     miles = 0;
                 }
+
                 return new Distance(miles * MetersPerMile);
             }
 
@@ -35,6 +36,7 @@ namespace Zebble.Plugin
                     Device.Log.Error("Negative values for distance not supported");
                     meters = 0;
                 }
+
                 return new Distance(meters);
             }
 
@@ -45,11 +47,11 @@ namespace Zebble.Plugin
                     Device.Log.Error("Negative values for distance not supported");
                     kilometers = 0;
                 }
+
                 return new Distance(kilometers * MetersPerKilometer);
             }
 
             public bool Equals(Distance other) => Meters.Equals(other.Meters);
-
             public override bool Equals(object obj)
             {
                 if (ReferenceEquals(null, obj))
@@ -58,7 +60,6 @@ namespace Zebble.Plugin
             }
 
             public override int GetHashCode() => Meters.GetHashCode();
-
             public static bool operator ==(Distance left, Distance right)
             {
                 return left.Equals(right);

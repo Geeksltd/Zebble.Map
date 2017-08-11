@@ -72,8 +72,7 @@
         void OnClick(IMKAnnotation nativeAnnotation)
         {
             var annotation = (nativeAnnotation as BasicMapAnnotation)?.View;
-            if (annotation != null && annotation.Content.LacksValue())
-                annotation.RaiseTapped();
+            annotation?.RaiseTapped();
         }
     }
 }

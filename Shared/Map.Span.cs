@@ -10,35 +10,52 @@ namespace Zebble.Plugin
             const double EarthRadiusKm = 6371;
             const double EarthCircumferenceKm = EarthRadiusKm * 2 * Math.PI;
             const double MinimumRangeDegrees = 0.001 / EarthCircumferenceKm * 360; // 1 meter
-
             public Span(GeoLocation topLeft, GeoLocation bottomLeft, GeoLocation bottomRight)
             {
                 TopLeft = topLeft;
                 BottomLeft = bottomLeft;
                 BottomRight = bottomRight;
                 Center = new GeoLocation(topLeft.Latitude - bottomRight.Latitude, topLeft.Longitude - bottomRight.Longitude);
-                TopRight = new GeoLocation
-                {
-                    Latitude = Center.Latitude + (Center.Latitude - bottomLeft.Latitude),
-                    Longitude = Center.Longitude + (Center.Longitude - bottomLeft.Longitude)
-                };
+                TopRight = new GeoLocation{Latitude = Center.Latitude + (Center.Latitude - bottomLeft.Latitude), Longitude = Center.Longitude + (Center.Longitude - bottomLeft.Longitude)};
             }
 
-            public GeoLocation TopLeft { get; }
+            public GeoLocation TopLeft
+            {
+                get;
+            }
 
-            public GeoLocation TopRight { get; }
+            public GeoLocation TopRight
+            {
+                get;
+            }
 
-            public GeoLocation BottomLeft { get; }
+            public GeoLocation BottomLeft
+            {
+                get;
+            }
 
-            public GeoLocation BottomRight { get; }
+            public GeoLocation BottomRight
+            {
+                get;
+            }
 
             public bool IsNorthup => TopLeft.Latitude > BottomLeft.Latitude && TopLeft.Longitude == BottomLeft.Longitude;
+            public GeoLocation Center
+            {
+                get;
+            }
 
-            public GeoLocation Center { get; }
+            public double LatitudeDegrees
+            {
+                get;
+                private set;
+            }
 
-            public double LatitudeDegrees { get; private set; }
-
-            public double LongitudeDegrees { get; private set; }
+            public double LongitudeDegrees
+            {
+                get;
+                private set;
+            }
 
             public Distance Radius
             {
@@ -81,7 +98,6 @@ namespace Zebble.Plugin
             }
 
             static double DistanceToLatitudeDegrees(Distance distance) => distance.Kilometers / EarthCircumferenceKm * 360;
-
             static double DistanceToLongitudeDegrees(GeoLocation position, Distance distance)
             {
                 var latCircumference = LatitudeCircumferenceKm(position);
@@ -99,7 +115,6 @@ namespace Zebble.Plugin
             }
 
             public static double LatitudeDegreesToKm(double latitudeDegrees) => EarthCircumferenceKm * latitudeDegrees / 360;
-
             public static double LongitudeDegreesToKm(GeoLocation position, double longitudeDegrees)
             {
                 var latCircumference = LatitudeCircumferenceKm(position);
@@ -109,8 +124,17 @@ namespace Zebble.Plugin
 
         public class GeographicalSpan
         {
-            public double Horizontal { get; set; }
-            public double Vertical { get; set; }
+            public double Horizontal
+            {
+                get;
+                set;
+            }
+
+            public double Vertical
+            {
+                get;
+                set;
+            }
         }
     }
 }

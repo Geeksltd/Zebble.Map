@@ -1,4 +1,4 @@
-﻿namespace Zebble.Plugin
+namespace Zebble.Plugin
 {
     using System;
     using System.Collections.Generic;
@@ -11,29 +11,25 @@
     {
         public static double DefaultLatitude = 51.5074;
         public static double DefaultLongitude = -0.1278;
-
         GeoLocation center;
         List<Annotation> annotations = new List<Annotation>();
         public IEnumerable<Annotation> Annotations => annotations;
-
         internal readonly AsyncEvent ApiZoomChanged = new AsyncEvent();
-        internal readonly AsyncEvent ZoomEnabledChanged = new AsyncEvent();
-        internal readonly AsyncEvent ScrollEnabledChanged = new AsyncEvent();
+        internal readonly AsyncEvent ZoomableChanged = new AsyncEvent();
+        internal readonly AsyncEvent ShowZoomControlsChanged = new AsyncEvent();
+        internal readonly AsyncEvent RotatableChanged = new AsyncEvent();
+        internal readonly AsyncEvent ScrollableChanged = new AsyncEvent();
         internal readonly AsyncEvent AnnotationsChanged = new AsyncEvent();
-
         public readonly AsyncEvent<GeoRegion> UserChanged = new AsyncEvent<GeoRegion>();
-
         internal Func<Task> NativeRefreshControl;
-
         public GeoLocation Center
         {
             get => center;
             set
             {
-                if (center == value) return;
-
+                if (center == value)
+                    return;
                 center = value;
-
                 if (IsAlreadyRendered())
                 {
                     if (NativeRefreshControl != null)
@@ -50,36 +46,75 @@
             get => zoomLevel;
             set
             {
-                if (zoomLevel == value) return;
-
+                if (zoomLevel == value)
+                    return;
                 zoomLevel = value;
                 ApiZoomChanged.Raise();
             }
         }
 
-        bool zoomEnable = true;
-        public bool ZoomEnable
+        bool zoomable = true;
+        public bool Zoomable
         {
-            get => zoomEnable;
-            set { if (zoomEnable == value) return; zoomEnable = value; ZoomEnabledChanged.Raise(); }
+            get => zoomable;
+            set
+            {
+                if (zoomable == value)
+                    return;
+                zoomable = value;
+                ZoomableChanged.Raise();
+            }
         }
 
-        bool scrollEnabled = true;
-        public bool ScrollEnabled
+        bool showZoomControls = false;
+        public bool ShowZoomControls
         {
-            get => scrollEnabled;
-            set { if (scrollEnabled == value) return; scrollEnabled = value; ScrollEnabledChanged.Raise(); }
+            get => showZoomControls;
+            set
+            {
+                if (showZoomControls == value)
+                    return;
+                showZoomControls = value;
+                ShowZoomControlsChanged.Raise();
+            }
         }
 
-        public Span VisibleRegion { get; internal set; }
+        bool rotatable = true;
+        public bool Rotatable
+        {
+            get => rotatable;
+            set
+            {
+                if (rotatable == value)
+                    return;
+                rotatable = value;
+                RotatableChanged.Raise();
+            }
+        }
 
-        public bool ShowZoomControls { get; set; } = true;
+        bool scrollable = true;
+        public bool Scrollable
+        {
+            get => scrollable;
+            set
+            {
+                if (scrollable == value)
+                    return;
+                scrollable = value;
+                ScrollableChanged.Raise();
+            }
+        }
+
+        public Span VisibleRegion
+        {
+            get;
+            internal set;
+        }
 
         internal async Task<GeoLocation> GetCenter()
         {
             if (Center != null && (Center.Longitude != 0 || Center.Latitude != 0))
                 return Center;
-
             // Center of annotations:
             if (Annotations.Any())
             {
@@ -90,9 +125,8 @@
             else
             {
                 var location = await Device.Location.GetCurrentPosition(desiredAccuracy: 1000);
-
-                if (location == null) return new GeoLocation(DefaultLatitude, DefaultLongitude);
-
+                if (location == null)
+                    return new GeoLocation(DefaultLatitude, DefaultLongitude);
                 return location;
             }
         }
@@ -113,17 +147,17 @@
 
         public async Task ClearAnnotations()
         {
-            foreach (var a in annotations.ToArray()) await Remove(a);
+            foreach (var a in annotations.ToArray())
+                await Remove(a);
         }
 
         public override void Dispose()
         {
             UserChanged?.Dispose();
             ApiZoomChanged?.Dispose();
-            ZoomEnabledChanged?.Dispose();
-            ScrollEnabledChanged?.Dispose();
+            ZoomableChanged?.Dispose();
+            ScrollableChanged?.Dispose();
             AnnotationsChanged?.Dispose();
-
             annotations.Do(x => x.Dispose());
             annotations.Clear();
             base.Dispose();
