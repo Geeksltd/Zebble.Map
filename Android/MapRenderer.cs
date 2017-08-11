@@ -20,6 +20,7 @@ namespace Zebble.Plugin.Renderer
         public async Task<Android.Views.View> Render(Renderer renderer)
         {
             View = (Map)renderer.View;
+            View.Width(Zebble.View.Root.ActualWidth).Margin(all: 0).X(0).Y(0).Height(Zebble.View.Root.ActualHeight);
             View.ShowZoomControlsChanged.HandleOn(Device.UIThread, () => Map.UiSettings.ZoomControlsEnabled = View.ShowZoomControls);
             View.ZoomableChanged.HandleOn(Device.UIThread, () => Map.UiSettings.ZoomControlsEnabled = View.Zoomable);
             View.PannableChanged.HandleOn(Device.UIThread, () => Map.UiSettings.ScrollGesturesEnabled = View.Pannable);
