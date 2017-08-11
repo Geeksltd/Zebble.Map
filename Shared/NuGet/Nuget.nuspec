@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
   <metadata>
     <id>Zebble.Plugin.Map</id>
-    <version>4.2.100</version>
+    <version>4.3.102</version>
     <title>Map for Zebble for Xamarin</title>
     <projectUrl>https://github.com/Geeksltd/Zebble.Plugin.Map</projectUrl>
     <iconUrl>https://raw.githubusercontent.com/Geeksltd/Zebble.Plugin.Map/master/Shared/Icon.png</iconUrl>
