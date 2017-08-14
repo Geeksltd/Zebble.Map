@@ -8,19 +8,20 @@ namespace Zebble.Plugin.Renderer
     using Android.Widget;
     using Zebble;
     using static Zebble.Plugin.Map;
+    using Android.Content;
+    using Android.Views;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     internal class MapRenderer : INativeRenderer
     {
         Map View;
-        FrameLayout Container; // The map will be drawn onto this after the page is rendered.
+        MapLayout Container; // The map will be drawn onto this after the page is rendered.
         MapFragment Fragment;
         GoogleMap Map;
         const double DEGREE360 = 360;
         public async Task<Android.Views.View> Render(Renderer renderer)
         {
             View = (Map)renderer.View;
-            View.Width(Zebble.View.Root.ActualWidth).Margin(all: 0).X(0).Y(0).Height(Zebble.View.Root.ActualHeight);
             View.ShowZoomControlsChanged.HandleOn(Device.UIThread, () => Map.UiSettings.ZoomControlsEnabled = View.ShowZoomControls);
             View.ZoomableChanged.HandleOn(Device.UIThread, () => Map.UiSettings.ZoomControlsEnabled = View.Zoomable);
             View.PannableChanged.HandleOn(Device.UIThread, () => Map.UiSettings.ScrollGesturesEnabled = View.Pannable);
@@ -28,9 +29,8 @@ namespace Zebble.Plugin.Renderer
             View.ApiZoomChanged.HandleOn(Device.UIThread, () => Map.AnimateCamera(CameraUpdateFactory.ZoomBy(View.ZoomLevel)));
             View.AnnotationsChanged.HandleOn(Device.UIThread, UpdateAnnotations);
             View.NativeRefreshControl = MoveToRegion;
-            Container = new FrameLayout(Renderer.Context)
-            {Id = Android.Views.View.GenerateViewId()};
-            await View.WhenShown(() => Device.UIThread.Run(LoadMap));
+            Container = new MapLayout(Renderer.Context) { Id = Android.Views.View.GenerateViewId() };
+            await View.WhenShown(() => { Device.UIThread.Run(LoadMap); });
             return Container;
         }
 
@@ -42,10 +42,11 @@ namespace Zebble.Plugin.Renderer
             await Task.Delay(Animation.OneFrame); // Wait for the fragment to be created.
             await CreateMap();
             Device.UIThread.RunAction(async () => await UpdateAnnotations());
+            var layoutParams = Fragment.View.LayoutParameters;
             await Task.CompletedTask;
         }
 
-        MapFragment CreateFragment(FrameLayout view, GoogleMapOptions options)
+        MapFragment CreateFragment(MapLayout view, GoogleMapOptions options)
         {
             var fragment = MapFragment.NewInstance(options);
             var transaction = UIRuntime.CurrentActivity.FragmentManager.BeginTransaction();
@@ -54,10 +55,7 @@ namespace Zebble.Plugin.Renderer
             return fragment;
         }
 
-        void Map_CameraChange(object _, GoogleMap.CameraChangeEventArgs args)
-        {
-            UpdateVisibleRegion();
-        }
+        void Map_CameraChange(object _, GoogleMap.CameraChangeEventArgs args) => UpdateVisibleRegion();
 
         async Task UpdateAnnotations()
         {
@@ -152,6 +150,54 @@ namespace Zebble.Plugin.Renderer
             View = null;
             Container?.Dispose();
             Container = null;
+        }
+    }
+
+    internal class MapLayout : FrameLayout
+    {
+        Zebble.ScrollView ScrollView = null;
+
+        public MapLayout(Context context) : base(context) { }
+
+        public override bool DispatchTouchEvent(MotionEvent ev)
+        {
+            FindScrollView();
+            var nativeScrollView = ScrollView?.Native as Android.Widget.ScrollView;
+
+            switch (ev.Action)
+            {
+                case MotionEventActions.Up:
+                case MotionEventActions.Down:
+                    if (nativeScrollView == null) break;
+                    nativeScrollView.RequestDisallowInterceptTouchEvent(disallowIntercept: true);
+                    ScrollView.EnableScrolling = false;
+                    break;
+                default:
+                    break;
+            }
+            return base.DispatchTouchEvent(ev);
+        }
+
+        internal void FindScrollView()
+        {
+            if (ScrollView != null) return;
+
+            foreach (var child in UIRuntime.PageContainer.AllChildren)
+            {
+                if (child is Page currentPage)
+                {
+                    foreach (var pageChild in currentPage.AllChildren)
+                    {
+                        if (pageChild is Canvas scrollWrapper && scrollWrapper.Id != null && scrollWrapper.Id == "BodyScrollerWrapper")
+                        {
+                            ScrollView = scrollWrapper.AllChildren.FirstOrDefault() as Zebble.ScrollView;
+                            break;
+                        }
+                    }
+
+                    if (ScrollView != null) break;
+                }
+            }
         }
     }
 }
