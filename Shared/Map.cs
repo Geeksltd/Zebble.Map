@@ -19,7 +19,8 @@ namespace Zebble.Plugin
         internal readonly AsyncEvent ShowZoomControlsChanged = new AsyncEvent();
         internal readonly AsyncEvent RotatableChanged = new AsyncEvent();
         internal readonly AsyncEvent PannableChanged = new AsyncEvent();
-        internal readonly AsyncEvent AnnotationsChanged = new AsyncEvent();
+        internal readonly AsyncEvent<Annotation> AddedAnnotation = new AsyncEvent<Annotation>();
+        internal readonly AsyncEvent<Annotation> RemovedAnnotation = new AsyncEvent<Annotation>();
         public readonly AsyncEvent<GeoRegion> UserChanged = new AsyncEvent<GeoRegion>();
         internal Func<Task> NativeRefreshControl;
         public GeoLocation Center
@@ -124,18 +125,22 @@ namespace Zebble.Plugin
             }
         }
 
-        public Task Add(params Annotation[] annotations)
+        public async Task Add(params Annotation[] annotations)
         {
-            this.annotations.AddRange(annotations);
-            AnnotationsChanged.Raise();
-            return Task.CompletedTask;
+            foreach (var a in annotations)
+            {
+                this.annotations.Add(a);
+                await AddedAnnotation.Raise(a);
+            }
         }
 
-        public Task Remove(params Annotation[] annotations)
+        public async Task Remove(params Annotation[] annotations)
         {
-            this.annotations.Remove(annotations);
-            AnnotationsChanged.Raise();
-            return Task.CompletedTask;
+            foreach (var a in annotations)
+            {
+                this.annotations.Remove(a);
+                await RemovedAnnotation.Raise(a);
+            }
         }
 
         public async Task ClearAnnotations()
@@ -150,7 +155,8 @@ namespace Zebble.Plugin
             ApiZoomChanged?.Dispose();
             ZoomableChanged?.Dispose();
             PannableChanged?.Dispose();
-            AnnotationsChanged?.Dispose();
+            AddedAnnotation?.Dispose();
+            RemovedAnnotation?.Dispose();
             annotations.Do(x => x.Dispose());
             annotations.Clear();
             base.Dispose();

@@ -39,7 +39,8 @@
             ScrollEnabledChanged();
             RotatableChanged();
             await MoveToRegion();
-            await UpdateAnnotations();
+
+            foreach (var a in View.Annotations) await RenderAnnotation(a);
 
             Result.ZoomLevelChanged += (s, a) => UpdateVisibleRegion();
             Result.CenterChanged += (s, a) => UpdateVisibleRegion();
@@ -111,7 +112,8 @@
             View.ZoomableChanged.HandleOn(Device.UIThread, () => ZoomEnabledChanged());
             View.PannableChanged.HandleOn(Device.UIThread, () => ScrollEnabledChanged());
             View.RotatableChanged.HandleOn(Device.UIThread, () => RotatableChanged());
-            View.AnnotationsChanged.HandleOn(Device.UIThread, async () => await UpdateAnnotations());
+            View.AddedAnnotation.HandleOn(Device.UIThread, RenderAnnotation);
+            View.RemovedAnnotation.HandleOn(Device.UIThread, a => RemoveAnnotation(a));
         }
 
         Task ZoomChanged() => CalCulate();
@@ -138,13 +140,11 @@
 
         async Task UpdateAnnotations()
         {
-            Result.MapElements.Clear();
-
             foreach (var annotation in View.Annotations)
             {
                 try
                 {
-                    await Render(annotation);
+                    await RenderAnnotation(annotation);
                 }
                 catch (Exception ex)
                 {
@@ -154,7 +154,7 @@
             }
         }
 
-        async Task Render(Map.Annotation annotation)
+        async Task RenderAnnotation(Map.Annotation annotation)
         {
             var poi = new MapIcon
             {
@@ -175,6 +175,15 @@
             }
 
             Result.MapElements.Add(poi);
+        }
+
+        void RemoveAnnotation(Map.Annotation annotation)
+        {
+            var native = annotation.Native as MapElement;
+            if (native == null) return;
+
+            if (Result.MapElements.Contains(native))
+                Result.MapElements.Remove(native);
         }
 
         public void Dispose() => Result = null;

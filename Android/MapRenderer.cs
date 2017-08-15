@@ -27,7 +27,9 @@ namespace Zebble.Plugin.Renderer
             View.PannableChanged.HandleOn(Device.UIThread, () => Map.UiSettings.ScrollGesturesEnabled = View.Pannable);
             View.PannableChanged.HandleOn(Device.UIThread, () => Map.UiSettings.RotateGesturesEnabled = View.Rotatable);
             View.ApiZoomChanged.HandleOn(Device.UIThread, () => Map.AnimateCamera(CameraUpdateFactory.ZoomBy(View.ZoomLevel)));
-            View.AnnotationsChanged.HandleOn(Device.UIThread, UpdateAnnotations);
+            View.AddedAnnotation.HandleOn(Device.UIThread, a => RenderAnnotation(a));
+            View.RemovedAnnotation.HandleOn(Device.UIThread, a => RemoveAnnotation(a));
+
             View.NativeRefreshControl = MoveToRegion;
             Container = new MapLayout(Renderer.Context) { Id = Android.Views.View.GenerateViewId() };
             await View.WhenShown(() => { Device.UIThread.Run(LoadMap); });
@@ -41,7 +43,7 @@ namespace Zebble.Plugin.Renderer
             Fragment = CreateFragment(Container, View.RenderOptions());
             await Task.Delay(Animation.OneFrame); // Wait for the fragment to be created.
             await CreateMap();
-            Device.UIThread.RunAction(async () => await UpdateAnnotations());
+            await View.Annotations.WhenAll(RenderAnnotation);
             var layoutParams = Fragment.View.LayoutParameters;
             await Task.CompletedTask;
         }
@@ -57,27 +59,27 @@ namespace Zebble.Plugin.Renderer
 
         void Map_CameraChange(object _, GoogleMap.CameraChangeEventArgs args) => UpdateVisibleRegion();
 
-        async Task UpdateAnnotations()
+        async Task RenderAnnotation(Annotation annotation)
         {
-            foreach (var annotation in View.Annotations)
+            var markerOptions = new MarkerOptions();
+            markerOptions.SetPosition(annotation.Location.Render());
+            markerOptions.SetTitle(annotation.Title.OrEmpty());
+            markerOptions.SetSnippet(annotation.Subtitle.OrEmpty());
+            if (annotation.Flat)
+                markerOptions.Flat(annotation.Flat);
+            if (annotation.IconPath.HasValue())
             {
-                var markerOptions = new MarkerOptions();
-                markerOptions.SetPosition(annotation.Location.Render());
-                markerOptions.SetTitle(annotation.Title.OrEmpty());
-                markerOptions.SetSnippet(annotation.Subtitle.OrEmpty());
-                if (annotation.Flat)
-                    markerOptions.Flat(annotation.Flat);
-                if (annotation.IconPath.HasValue())
-                {
-                    var provider = await annotation.GetPinImageProvider();
-                    var image = await provider.Result() as Android.Graphics.Bitmap;
-                    markerOptions.SetIcon(BitmapDescriptorFactory.FromBitmap(image));
-                }
-
-                var marker = Map.AddMarker(markerOptions);
-                marker.Tag = new AnnotationRef(annotation);
+                var provider = await annotation.GetPinImageProvider();
+                var image = await provider.Result() as Android.Graphics.Bitmap;
+                markerOptions.SetIcon(BitmapDescriptorFactory.FromBitmap(image));
             }
+
+            var marker = Map.AddMarker(markerOptions);
+            marker.Tag = new AnnotationRef(annotation);
+            annotation.Native = marker;
         }
+
+        void RemoveAnnotation(Annotation annotation) => (annotation.Native as Marker)?.Remove();
 
         async Task MoveToRegion()
         {

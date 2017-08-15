@@ -55,12 +55,13 @@ namespace Zebble.Plugin.Renderer
 
             ZoomControllingChanged();
             MoveToRegion();
-            UpdateAnnotations();
+            View.Annotations.Do(RenderAnnotation);
             View.ZoomableChanged.HandleActionOn(Device.UIThread, ZoomControllingChanged);
             View.ApiZoomChanged.HandleOn(Device.UIThread, () => MoveToRegion());
             View.PannableChanged.HandleOn(Device.UIThread, () => Result.ScrollEnabled = View.Pannable);
             View.RotatableChanged.HandleOn(Device.UIThread, () => Result.RotateEnabled = View.Rotatable);
-            View.AnnotationsChanged.HandleActionOn(Device.UIThread, UpdateAnnotations);
+            View.AddedAnnotation.HandleOn(Device.UIThread, a => RenderAnnotation(a));
+            View.RemovedAnnotation.HandleOn(Device.UIThread, a => RemoveAnnotation(a));
 
             using (var mapDelegate = new IosMapDelegate(View))
                 Result.GetViewForAnnotation = mapDelegate.GetViewForAnnotation;
@@ -70,17 +71,16 @@ namespace Zebble.Plugin.Renderer
 
         void ZoomControllingChanged() => Result.ZoomEnabled = View.Zoomable || View.ShowZoomControls;
 
-        void UpdateAnnotations()
+        void RenderAnnotation(Map.Annotation annotation)
         {
-            var toRemove = Result.Annotations.Cast<BasicMapAnnotation>()
-                .Except(x => View.Annotations.Contains(x.View)).ToArray();
-            Result.RemoveAnnotations(toRemove);
+            Result.AddAnnotation(new BasicMapAnnotation(annotation));
+        }
 
-            foreach (var t in View.Annotations)
-            {
-                if (Result.Annotations.Cast<BasicMapAnnotation>().None(x => x.View == t))
-                    Result.AddAnnotation(new BasicMapAnnotation(t));
-            }
+        void RemoveAnnotation(Map.Annotation annotation)
+        {
+            var native = annotation.Native as BasicMapAnnotation;
+            if (native != null)
+                Result.RemoveAnnotation(native);
         }
 
         void MoveToRegion()
