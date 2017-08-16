@@ -1,4 +1,4 @@
-namespace Zebble.Plugin.Renderer
+namespace Zebble
 {
     using Android.Gms.Maps;
     using Android.Gms.Maps.Model;

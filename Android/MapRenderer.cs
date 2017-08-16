@@ -1,4 +1,4 @@
-namespace Zebble.Plugin.Renderer
+namespace Zebble
 {
     using System;
     using System.ComponentModel;
@@ -7,7 +7,6 @@ namespace Zebble.Plugin.Renderer
     using Android.Gms.Maps.Model;
     using Android.Widget;
     using Zebble;
-    using static Zebble.Plugin.Map;
     using Android.Content;
     using Android.Views;
 
@@ -58,7 +57,7 @@ namespace Zebble.Plugin.Renderer
 
         void Map_CameraChange(object _, GoogleMap.CameraChangeEventArgs args) => UpdateVisibleRegion();
 
-        async Task RenderAnnotation(Annotation annotation)
+        async Task RenderAnnotation(Map.Annotation annotation)
         {
             var markerOptions = new MarkerOptions();
             markerOptions.SetPosition(annotation.Location.Render());
@@ -78,7 +77,7 @@ namespace Zebble.Plugin.Renderer
             annotation.Native = marker;
         }
 
-        void RemoveAnnotation(Annotation annotation) => (annotation.Native as Marker)?.Remove();
+        void RemoveAnnotation(Map.Annotation annotation) => (annotation.Native as Marker)?.Remove();
 
         async Task MoveToRegion()
         {
@@ -105,7 +104,7 @@ namespace Zebble.Plugin.Renderer
             var topLeft = projection.FromScreenLocation(new Android.Graphics.Point(0, 0));
             var bottomLeft = projection.FromScreenLocation(new Android.Graphics.Point(0, height));
             var bottomRight = projection.FromScreenLocation(new Android.Graphics.Point(width, height));
-            View.VisibleRegion = new Span(topLeft.ToZebble(), bottomLeft.ToZebble(), bottomRight.ToZebble());
+            View.VisibleRegion = new Map.Span(topLeft.ToZebble(), bottomLeft.ToZebble(), bottomRight.ToZebble());
         }
 
         void OnApiZoomChanged() => Map.AnimateCamera(CameraUpdateFactory.ZoomBy(View.ZoomLevel));

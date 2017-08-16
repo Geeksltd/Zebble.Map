@@ -1,4 +1,4 @@
-namespace Zebble.Plugin.Renderer
+namespace Zebble
 {
     using System;
     using System.Collections.Generic;
@@ -10,7 +10,7 @@ namespace Zebble.Plugin.Renderer
     using UIKit;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public class MapRenderer : INativeRenderer
+    class MapRenderer : INativeRenderer
     {
         Map View;
         MKMapView Result;
@@ -21,7 +21,7 @@ namespace Zebble.Plugin.Renderer
 
         List<object> ActionList = new List<object>();
 
-        public async Task<UIView> Render(Zebble.Renderer renderer)
+        public async Task<UIView> Render(Renderer renderer)
         {
             View = (Map)renderer.View;
             Result = new MKMapView();

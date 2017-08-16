@@ -1,4 +1,4 @@
-﻿namespace Zebble.Plugin.Renderer
+﻿namespace Zebble
 {
     using System;
     using System.ComponentModel;
@@ -10,11 +10,10 @@
     using Windows.Storage.Streams;
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls.Maps;
-    using Zebble;
     using Zebble.Services;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public class MapRenderer : INativeRenderer
+    class MapRenderer : INativeRenderer
     {
         Map View;
         MapControl Result;
@@ -190,11 +189,6 @@
                 Latitude = location.Latitude,
                 Longitude = location.Longitude
             });
-        }
-
-        public static Task<StorageFile> ToStorageFile(this FileInfo file)
-        {
-            return StorageFile.GetFileFromPathAsync(file.FullName).AsTask();
         }
     }
 }

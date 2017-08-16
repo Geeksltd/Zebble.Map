@@ -1,4 +1,4 @@
-namespace Zebble.Plugin
+namespace Zebble
 {
     using System;
     using System.Collections.Generic;
@@ -7,7 +7,7 @@ namespace Zebble.Plugin
     using Zebble;
     using Zebble.Services;
 
-    public partial class Map : View, IRenderedBy<Renderer.MapRenderer>
+    public partial class Map : View, IRenderedBy<MapRenderer>
     {
         public static double DefaultLatitude = 51.5074;
         public static double DefaultLongitude = -0.1278;
