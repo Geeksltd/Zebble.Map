@@ -52,7 +52,7 @@ namespace Zebble
             await SetCenter();
             ZoomControllingChanged();
             MoveToRegion();
-            View.Annotations.Do(RenderAnnotation);
+            await View.Annotations.WhenAll(RenderAnnotation);
             View.ZoomableChanged.HandleActionOn(Device.UIThread, ZoomControllingChanged);
             View.ApiZoomChanged.HandleOn(Device.UIThread, () => MoveToRegion());
             View.PannableChanged.HandleOn(Device.UIThread, () => Result.ScrollEnabled = View.Pannable);
@@ -71,9 +71,11 @@ namespace Zebble
 
         void ZoomControllingChanged() => Result.ZoomEnabled = View.Zoomable || View.ShowZoomControls;
 
-        void RenderAnnotation(Map.Annotation annotation)
+        async Task RenderAnnotation(Map.Annotation annotation)
         {
-            Result.AddAnnotation(new BasicMapAnnotation(annotation));
+            var native = new BasicMapAnnotation(annotation);
+            await native.AwaitImage();
+            Result.AddAnnotation(native);
         }
 
         void RemoveAnnotation(Map.Annotation annotation)

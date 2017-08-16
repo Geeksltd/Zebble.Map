@@ -22,33 +22,7 @@
 
             pin.Annotation = annotation;
             AttachGestureToPin(pin, annotation);
-
-            var view = (annotation as BasicMapAnnotation)?.View;
-            if (view.IconPath.HasValue())
-            {
-                try
-                {
-                    Device.UIThread.Run(async () =>
-                    {
-                        var provider = await view.GetPinImageProvider();
-                        var image = await provider.Result() as UIImage;
-
-                        for (var ensureOverridesDefaultImage = 4;
-                        ensureOverridesDefaultImage > 0;
-                        ensureOverridesDefaultImage--)
-                        {
-                            pin.Image = image;
-                            await Task.Delay(Animation.OneFrame);
-                        }
-                    });
-                }
-                catch (Exception ex)
-                {
-                    Device.Log.Error("An error happened loading annotation pin image:");
-                    Device.Log.Error(ex.Message);
-                    Device.Log.Message(ex.StackTrace);
-                }
-            }
+            pin.Image = (annotation as BasicMapAnnotation)?.Image ?? pin.Image;
 
             return pin;
         }
