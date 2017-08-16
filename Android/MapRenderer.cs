@@ -35,6 +35,7 @@ namespace Zebble
         }
 
         Task FixThread() => Task.Delay(Animation.OneFrame);
+
         async Task LoadMap()
         {
             await Task.Delay(Animation.OneFrame);
@@ -63,8 +64,9 @@ namespace Zebble
             markerOptions.SetPosition(annotation.Location.Render());
             markerOptions.SetTitle(annotation.Title.OrEmpty());
             markerOptions.SetSnippet(annotation.Subtitle.OrEmpty());
-            if (annotation.Flat)
-                markerOptions.Flat(annotation.Flat);
+
+            if (annotation.Flat) markerOptions.Flat(annotation.Flat);
+
             if (annotation.IconPath.HasValue())
             {
                 var provider = await annotation.GetPinImageProvider();
@@ -118,17 +120,18 @@ namespace Zebble
             Map.UiSettings.ScrollGesturesEnabled = View.Pannable;
             Map.UiSettings.RotateGesturesEnabled = View.Rotatable;
             Map.CameraChange += Map_CameraChange;
-            Map.MarkerClick += Map_MarkerClick;
+            //Map.MarkerClick += Map_MarkerClick;
             Map.InfoWindowClick += Map_InfoWindowClick;
             Map.AnimateCamera(CameraUpdateFactory.NewLatLngZoom(View.Center.Render(), View.ZoomLevel));
         }
 
         void Map_InfoWindowClick(object _, GoogleMap.InfoWindowClickEventArgs e) => RaiseTapped(e.Marker);
-        void Map_MarkerClick(object _, GoogleMap.MarkerClickEventArgs e)
-        {
-            RaiseTapped(e.Marker);
-            e.Handled = false;
-        }
+
+        //void Map_MarkerClick(object _, GoogleMap.MarkerClickEventArgs e)
+        //{
+        //    RaiseTapped(e.Marker);
+        //    e.Handled = false;
+        //}
 
         void RaiseTapped(Marker marker)
         {
@@ -143,7 +146,7 @@ namespace Zebble
         {
             Map.Perform(m => m.CameraChange -= Map_CameraChange);
             Map.Perform(m => m.InfoWindowClick -= Map_InfoWindowClick);
-            Map.Perform(m => m.MarkerClick -= Map_MarkerClick);
+            //Map.Perform(m => m.MarkerClick -= Map_MarkerClick);
             Map = null;
             Fragment?.Dispose();
             Fragment = null;
