@@ -22,7 +22,7 @@ namespace Zebble.Plugin
         internal readonly AsyncEvent<Annotation> AddedAnnotation = new AsyncEvent<Annotation>();
         internal readonly AsyncEvent<Annotation> RemovedAnnotation = new AsyncEvent<Annotation>();
         internal readonly AsyncEvent ApiCenterChanged = new AsyncEvent();
-        public readonly AsyncEvent<GeoRegion> UserChanged = new AsyncEvent<GeoRegion>();
+        public readonly AsyncEvent<GeoRegion> UserChangedRegion = new AsyncEvent<GeoRegion>();
 
         public GeoLocation Center
         {
@@ -138,21 +138,19 @@ namespace Zebble.Plugin
             }
         }
 
-        public async Task ClearAnnotations()
-        {
-            foreach (var a in annotations.ToArray())
-                await Remove(a);
-        }
+        public Task ClearAnnotations() => annotations.ToArray().WhenAll(x => Remove(x));
 
         public override void Dispose()
         {
-            UserChanged?.Dispose();
+            UserChangedRegion?.Dispose();
             ApiZoomChanged?.Dispose();
             ZoomableChanged?.Dispose();
             PannableChanged?.Dispose();
             AddedAnnotation?.Dispose();
             RemovedAnnotation?.Dispose();
+            ShowZoomControlsChanged?.Dispose();
             ApiCenterChanged?.Dispose();
+            RotatableChanged?.Dispose();
             annotations.Do(x => x.Dispose());
             annotations.Clear();
             base.Dispose();

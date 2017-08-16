@@ -40,7 +40,7 @@ namespace Zebble.Plugin.Renderer
             var bottomLeft = Result.ConvertPoint(new CoreGraphics.CGPoint(x: 0, y: Result.Bounds.Height), toCoordinateFromView: Result);
             var bottomRight = Result.ConvertPoint(new CoreGraphics.CGPoint(x: Result.Bounds.Width, y: Result.Bounds.Height), toCoordinateFromView: Result);
             View.VisibleRegion = new Map.Span(GetGeoLocation(topLeft), GetGeoLocation(bottomLeft), GetGeoLocation(bottomRight));
-            View.UserChanged.RaiseOn(Device.ThreadPool, region);
+            View.UserChangedRegion.RaiseOn(Device.ThreadPool, region);
         }
 
         async Task GenerateMap()
