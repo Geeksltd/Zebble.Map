@@ -17,30 +17,28 @@
             if (Runtime.GetNSObject(annotation.Handle) is MKUserLocation userLocationAnnotation)
                 return default(MKAnnotationView);
 
-            var pin = (MKPinAnnotationView)mapView.DequeueReusableAnnotation("defaultPin")
-                ?? new MKPinAnnotationView(annotation, "defaultPin") { CanShowCallout = true };
+            var pin = (MKPinAnnotationView)mapView.DequeueReusableAnnotation("defaultPin");
+            if (pin == null)
+                pin = new MKPinAnnotationView(annotation, "defaultPin") { CanShowCallout = true };
 
             pin.Annotation = annotation;
-            AttachGestureToPin(pin, annotation);
-            pin.Image = (annotation as BasicMapAnnotation)?.Image ?? pin.Image;
+            pin.RightCalloutAccessoryView = CreateCalloutButton(annotation);
+
+            var image = (annotation as BasicMapAnnotation)?.Image;
+            if (image != null)
+            {
+                pin.Image = image;
+                Device.UIThread.Post(() => pin.Image = image);
+            }
 
             return pin;
         }
 
-        void AttachGestureToPin(MKPinAnnotationView mapPin, IMKAnnotation annotation)
+        UIButton CreateCalloutButton(IMKAnnotation annotation)
         {
-            var recognizers = mapPin.GestureRecognizers;
-
-            if (recognizers != null)
-                foreach (var r in recognizers)
-                    mapPin.RemoveGestureRecognizer(r);
-
-            var recognizer = new UITapGestureRecognizer(g => OnClick(annotation))
-            {
-                ShouldReceiveTouch = (gestureRecognizer, touch) => true
-            };
-
-            mapPin.AddGestureRecognizer(recognizer);
+            var result = new UIButton(UIButtonType.DetailDisclosure);
+            result.AddTarget((s, e) => OnClick(annotation), UIControlEvent.TouchUpInside);
+            return result;
         }
 
         void OnClick(IMKAnnotation nativeAnnotation)
