@@ -17,9 +17,8 @@
             if (Runtime.GetNSObject(annotation.Handle) is MKUserLocation userLocationAnnotation)
                 return default(MKAnnotationView);
 
-            var pin = (MKPinAnnotationView)mapView.DequeueReusableAnnotation("defaultPin");
-            if (pin == null)
-                pin = new MKPinAnnotationView(annotation, "defaultPin") { CanShowCallout = true };
+            var pin = mapView.DequeueReusableAnnotation("defaultPin")
+                ?? new MKAnnotationView(annotation, "defaultPin") { CanShowCallout = true };
 
             pin.Annotation = annotation;
             pin.RightCalloutAccessoryView = CreateCalloutButton(annotation);
