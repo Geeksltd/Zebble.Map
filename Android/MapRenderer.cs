@@ -29,8 +29,7 @@ namespace Zebble.Plugin.Renderer
             View.ApiZoomChanged.HandleOn(Device.UIThread, () => Map.AnimateCamera(CameraUpdateFactory.ZoomBy(View.ZoomLevel)));
             View.AddedAnnotation.HandleOn(Device.UIThread, a => RenderAnnotation(a));
             View.RemovedAnnotation.HandleOn(Device.UIThread, a => RemoveAnnotation(a));
-
-            View.NativeRefreshControl = MoveToRegion;
+            View.ApiCenterChanged.HandleOn(Device.UIThread, MoveToRegion);
             Container = new MapLayout(Renderer.Context) { Id = Android.Views.View.GenerateViewId() };
             await View.WhenShown(() => { Device.UIThread.Run(LoadMap); });
             return Container;

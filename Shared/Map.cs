@@ -21,8 +21,9 @@ namespace Zebble.Plugin
         internal readonly AsyncEvent PannableChanged = new AsyncEvent();
         internal readonly AsyncEvent<Annotation> AddedAnnotation = new AsyncEvent<Annotation>();
         internal readonly AsyncEvent<Annotation> RemovedAnnotation = new AsyncEvent<Annotation>();
+        internal readonly AsyncEvent ApiCenterChanged = new AsyncEvent();
         public readonly AsyncEvent<GeoRegion> UserChanged = new AsyncEvent<GeoRegion>();
-        internal Func<Task> NativeRefreshControl;
+
         public GeoLocation Center
         {
             get => center;
@@ -30,13 +31,7 @@ namespace Zebble.Plugin
             {
                 if (center == value) return;
                 center = value;
-                if (IsAlreadyRendered())
-                {
-                    if (NativeRefreshControl != null)
-                        NativeRefreshControl().RunInParallel();
-                    else
-                        throw new NotImplementedException("The native control should provide NativeSetZoomFactors.");
-                }
+                ApiCenterChanged.RaiseOn(Device.UIThread);
             }
         }
 
@@ -157,6 +152,7 @@ namespace Zebble.Plugin
             PannableChanged?.Dispose();
             AddedAnnotation?.Dispose();
             RemovedAnnotation?.Dispose();
+            ApiCenterChanged?.Dispose();
             annotations.Do(x => x.Dispose());
             annotations.Clear();
             base.Dispose();

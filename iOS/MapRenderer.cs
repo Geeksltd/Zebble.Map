@@ -3,13 +3,11 @@ namespace Zebble.Plugin.Renderer
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
-    using System.Linq;
     using System.Threading.Tasks;
     using CoreLocation;
     using MapKit;
     using Services;
     using UIKit;
-    using static Zebble.Plugin.Map;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     public class MapRenderer : INativeRenderer
@@ -41,7 +39,7 @@ namespace Zebble.Plugin.Renderer
             var topLeft = Result.ConvertPoint(new CoreGraphics.CGPoint(x: 0, y: 0), toCoordinateFromView: Result);
             var bottomLeft = Result.ConvertPoint(new CoreGraphics.CGPoint(x: 0, y: Result.Bounds.Height), toCoordinateFromView: Result);
             var bottomRight = Result.ConvertPoint(new CoreGraphics.CGPoint(x: Result.Bounds.Width, y: Result.Bounds.Height), toCoordinateFromView: Result);
-            View.VisibleRegion = new Span(GetGeoLocation(topLeft), GetGeoLocation(bottomLeft), GetGeoLocation(bottomRight));
+            View.VisibleRegion = new Map.Span(GetGeoLocation(topLeft), GetGeoLocation(bottomLeft), GetGeoLocation(bottomRight));
             View.UserChanged.RaiseOn(Device.ThreadPool, region);
         }
 
@@ -50,9 +48,8 @@ namespace Zebble.Plugin.Renderer
             if (View != null) Result.Frame = View.GetFrame();
             Result.ScrollEnabled = View.Pannable;
             Result.RotateEnabled = View.Rotatable;
-            //ShowsUserLocation = View.ShowsUserLocation;
-            Result.CenterCoordinate = (await View.GetCenter()).Render();
 
+            await SetCenter();
             ZoomControllingChanged();
             MoveToRegion();
             View.Annotations.Do(RenderAnnotation);
@@ -62,12 +59,15 @@ namespace Zebble.Plugin.Renderer
             View.RotatableChanged.HandleOn(Device.UIThread, () => Result.RotateEnabled = View.Rotatable);
             View.AddedAnnotation.HandleOn(Device.UIThread, a => RenderAnnotation(a));
             View.RemovedAnnotation.HandleOn(Device.UIThread, a => RemoveAnnotation(a));
+            View.ApiCenterChanged.HandleOn(Device.UIThread, SetCenter);
 
             using (var mapDelegate = new IosMapDelegate(View))
                 Result.GetViewForAnnotation = mapDelegate.GetViewForAnnotation;
 
             Result.RegionChanged += IosMap_RegionChanged;
         }
+
+        async Task SetCenter() => Result.CenterCoordinate = (await View.GetCenter()).Render();
 
         void ZoomControllingChanged() => Result.ZoomEnabled = View.Zoomable || View.ShowZoomControls;
 

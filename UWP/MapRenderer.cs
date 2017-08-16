@@ -44,36 +44,27 @@
 
             Result.ZoomLevelChanged += (s, a) => UpdateVisibleRegion();
             Result.CenterChanged += (s, a) => UpdateVisibleRegion();
-            Result.Loaded += async (s, a) => await MapReady();
+
+            Result.MapElementClick += Result_MapElementClick;
+            Result.Loaded += Result_Loaded;
 
             HandleEvents();
-
-            View.NativeRefreshControl = MoveToRegion;
 
             return Result;
         }
 
-        async Task MapReady()
+        void Result_Loaded(object _, RoutedEventArgs __)
         {
-            Result.MapElementClick += Result_MapElementClick;
-
-            await MoveToRegion();
+            Result.Loaded -= Result_Loaded;
+            MoveToRegion().RunInParallel();
         }
 
         void Result_MapElementClick(MapControl sender, MapElementClickEventArgs ev)
         {
-            var markers = ev.MapElements.Where(m => m is MapIcon).ToList();
+            var markers = ev.MapElements.OfType<MapIcon>().ToList();
 
-            foreach (var marker in markers.Cast<MapIcon>())
-            {
-                var annotation = View.Annotations.FirstOrDefault(a => a.Native == marker);
-                if (annotation != null)
-                {
-                    annotation.RaiseTapped();
-                }
-                else
-                    throw new ArgumentOutOfRangeException("ev", "A map element tapped which does not have any annotation.");
-            }
+            foreach (var marker in markers)
+                View.Annotations.FirstOrDefault(a => a.Native == marker)?.RaiseTapped();
         }
 
         async Task MoveToRegion()
@@ -114,6 +105,7 @@
             View.RotatableChanged.HandleOn(Device.UIThread, () => RotatableChanged());
             View.AddedAnnotation.HandleOn(Device.UIThread, RenderAnnotation);
             View.RemovedAnnotation.HandleOn(Device.UIThread, a => RemoveAnnotation(a));
+            View.ApiCenterChanged.HandleOn(Device.UIThread, MoveToRegion);
         }
 
         Task ZoomChanged() => CalCulate();
