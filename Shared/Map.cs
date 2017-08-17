@@ -38,14 +38,18 @@ namespace Zebble
         int zoomLevel = 13;
         bool zoomable = true;
         bool showZoomControls = false;
-        bool rotatable = true;
+        bool rotatable = false;
         bool pannable = true;
 
+        /// <summary>
+        /// The map zoom level from 1 to 20. Default is 13. The higher, the more zoomed (close up).
+        /// </summary>
         public int ZoomLevel
         {
             get => zoomLevel;
             set
             {
+                zoomLevel = zoomLevel.LimitWithin(1, 20);
                 if (zoomLevel == value) return;
                 zoomLevel = value;
                 ApiZoomChanged.Raise();
@@ -102,8 +106,8 @@ namespace Zebble
 
         internal async Task<GeoLocation> GetCenter()
         {
-            if (Center != null && (Center.Longitude != 0 || Center.Latitude != 0))
-                return Center;
+            if (Center != null && (Center.Longitude != 0 || Center.Latitude != 0)) return Center;
+
             // Center of annotations:
             if (Annotations.Any())
             {

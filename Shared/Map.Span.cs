@@ -16,46 +16,18 @@ namespace Zebble
                 BottomLeft = bottomLeft;
                 BottomRight = bottomRight;
                 Center = new GeoLocation(topLeft.Latitude - bottomRight.Latitude, topLeft.Longitude - bottomRight.Longitude);
-                TopRight = new GeoLocation{Latitude = Center.Latitude + (Center.Latitude - bottomLeft.Latitude), Longitude = Center.Longitude + (Center.Longitude - bottomLeft.Longitude)};
+                TopRight = new GeoLocation { Latitude = Center.Latitude + (Center.Latitude - bottomLeft.Latitude), Longitude = Center.Longitude + (Center.Longitude - bottomLeft.Longitude) };
             }
 
-            public GeoLocation TopLeft
-            {
-                get;
-            }
-
-            public GeoLocation TopRight
-            {
-                get;
-            }
-
-            public GeoLocation BottomLeft
-            {
-                get;
-            }
-
-            public GeoLocation BottomRight
-            {
-                get;
-            }
+            public GeoLocation TopLeft { get; }
+            public GeoLocation TopRight { get; }
+            public GeoLocation BottomLeft { get; }
+            public GeoLocation BottomRight { get; }
+            public GeoLocation Center { get; }
+            public double LatitudeDegrees { get; }
+            public double LongitudeDegrees { get; }
 
             public bool IsNorthup => TopLeft.Latitude > BottomLeft.Latitude && TopLeft.Longitude == BottomLeft.Longitude;
-            public GeoLocation Center
-            {
-                get;
-            }
-
-            public double LatitudeDegrees
-            {
-                get;
-                private set;
-            }
-
-            public double LongitudeDegrees
-            {
-                get;
-                private set;
-            }
 
             public Distance Radius
             {
@@ -69,11 +41,9 @@ namespace Zebble
 
             public override bool Equals(object obj)
             {
-                if (ReferenceEquals(null, obj))
-                    return false;
-                if (ReferenceEquals(this, obj))
-                    return true;
-                return obj is Span && Equals((Span)obj);
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                return obj is Span s && Equals(s);
             }
 
             public override int GetHashCode()
@@ -87,17 +57,12 @@ namespace Zebble
                 }
             }
 
-            public static bool operator ==(Span left, Span right)
-            {
-                return Equals(left, right);
-            }
+            public static bool operator ==(Span left, Span right) => Equals(left, right);
 
-            public static bool operator !=(Span left, Span right)
-            {
-                return !Equals(left, right);
-            }
+            public static bool operator !=(Span left, Span right) => !Equals(left, right);
 
             static double DistanceToLatitudeDegrees(Distance distance) => distance.Kilometers / EarthCircumferenceKm * 360;
+
             static double DistanceToLongitudeDegrees(GeoLocation position, Distance distance)
             {
                 var latCircumference = LatitudeCircumferenceKm(position);
@@ -119,21 +84,6 @@ namespace Zebble
             {
                 var latCircumference = LatitudeCircumferenceKm(position);
                 return latCircumference * longitudeDegrees / 360;
-            }
-        }
-
-        public class GeographicalSpan
-        {
-            public double Horizontal
-            {
-                get;
-                set;
-            }
-
-            public double Vertical
-            {
-                get;
-                set;
             }
         }
     }
