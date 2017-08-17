@@ -109,7 +109,8 @@ namespace Zebble
             View.VisibleRegion = new Map.Span(topLeft.ToZebble(), bottomLeft.ToZebble(), bottomRight.ToZebble());
         }
 
-        void OnApiZoomChanged() => Map.AnimateCamera(CameraUpdateFactory.ZoomBy(View.ZoomLevel));
+        void OnApiZoomChanged() => Map.AnimateCamera(CameraUpdateFactory.ZoomTo(1 + View.ZoomLevel));
+
         async Task CreateMap()
         {
             var source = new TaskCompletionSource<GoogleMap>();
