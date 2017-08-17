@@ -45,6 +45,7 @@
   <ItemGroup>
     <None Include="packages.config" />
     <Compile Include="BasicMapAnnotation.cs" />
+    <Compile Include="RegionCalculator.cs" />
     <Compile Include="MapRenderer.cs" />
     <Compile Include="IosMapDelegate.cs" />
   </ItemGroup>

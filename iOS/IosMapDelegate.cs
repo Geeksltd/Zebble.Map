@@ -1,7 +1,5 @@
 ﻿namespace Zebble
 {
-    using System;
-    using System.Threading.Tasks;
     using MapKit;
     using ObjCRuntime;
     using UIKit;
