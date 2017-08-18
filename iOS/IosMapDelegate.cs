@@ -1,5 +1,6 @@
 ﻿namespace Zebble
 {
+    using System;
     using MapKit;
     using ObjCRuntime;
     using UIKit;
@@ -21,7 +22,7 @@
                 Annotation = annotation,
                 RightCalloutAccessoryView = CreateCalloutButton(annotation)
             };
-
+            
             var image = (annotation as BasicMapAnnotation)?.Image;
             if (image != null)
             {
@@ -44,6 +45,16 @@
         {
             var annotation = (nativeAnnotation as BasicMapAnnotation)?.View;
             annotation?.RaiseTapped();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                Map = null;
+            }
+
+            base.Dispose(disposing);
         }
     }
 }

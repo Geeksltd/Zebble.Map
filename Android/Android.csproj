@@ -15,7 +15,8 @@
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
     <AndroidUseLatestPlatformSdk>True</AndroidUseLatestPlatformSdk>
     <TargetFrameworkVersion>v7.1</TargetFrameworkVersion>
-    <NuGetPackageImportStamp></NuGetPackageImportStamp>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -93,6 +94,7 @@
     <None Include="packages.config" />
     <Compile Include="ANDROID.Map.cs" />
     <Compile Include="AndroidRenderExtensions.cs" />
+    <Compile Include="MapLayout.cs" />
     <Compile Include="MapReadyCallBack.cs" />
     <Compile Include="MapRenderer.cs" />
   </ItemGroup>

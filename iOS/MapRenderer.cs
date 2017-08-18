@@ -93,6 +93,7 @@ namespace Zebble
         public void Dispose()
         {
             View = null;
+            Result?.Annotations.Do(x => x.Dispose());
             Result?.Dispose();
             Result = null;
         }
