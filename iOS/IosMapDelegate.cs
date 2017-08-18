@@ -15,17 +15,19 @@
             if (Runtime.GetNSObject(annotation.Handle) is MKUserLocation userLocationAnnotation)
                 return default(MKAnnotationView);
 
-            var pin = mapView.DequeueReusableAnnotation("defaultPin")
-                ?? new MKAnnotationView(annotation, "defaultPin") { CanShowCallout = true };
-
-            pin.Annotation = annotation;
-            pin.RightCalloutAccessoryView = CreateCalloutButton(annotation);
+            var pin = new MKAnnotationView(annotation, "defaultPin")
+            {
+                CanShowCallout = true,
+                Annotation = annotation,
+                RightCalloutAccessoryView = CreateCalloutButton(annotation)
+            };
 
             var image = (annotation as BasicMapAnnotation)?.Image;
             if (image != null)
             {
                 pin.Image = image;
                 Device.UIThread.Post(() => pin.Image = image);
+                pin.CenterOffset = new CoreGraphics.CGPoint(0, -image.Size.Height / 2);
             }
 
             return pin;
