@@ -52,7 +52,7 @@ namespace Zebble
             return fragment;
         }
 
-        void Map_CameraChange(object _, GoogleMap.CameraChangeEventArgs args) => UpdateVisibleRegion();
+        void Map_CameraChange(object _, GoogleMap.CameraChangeEventArgs args) => OnUserChangedRegion();
 
         async Task RenderAnnotation(Map.Annotation annotation)
         {
@@ -91,18 +91,20 @@ namespace Zebble
             }
         }
 
-        void UpdateVisibleRegion()
+        void OnUserChangedRegion()
         {
-            var map = Map;
-            if (map == null)
-                return;
-            var projection = map.Projection;
+            var projection = Map?.Projection;
+            if (projection == null) return;
             var width = Fragment.View.Width;
             var height = Fragment.View.Height;
             var topLeft = projection.FromScreenLocation(new Android.Graphics.Point(0, 0));
             var bottomLeft = projection.FromScreenLocation(new Android.Graphics.Point(0, height));
             var bottomRight = projection.FromScreenLocation(new Android.Graphics.Point(width, height));
             View.VisibleRegion = new Map.Span(topLeft.ToZebble(), bottomLeft.ToZebble(), bottomRight.ToZebble());
+
+            var region = Services.GeoRegion.FromCentre(View.VisibleRegion.Center,
+                View.VisibleRegion.LatitudeDegrees, View.VisibleRegion.LongitudeDegrees);
+            View.UserChangedRegion.RaiseOn(Device.ThreadPool, region);
         }
 
         void OnApiZoomChanged() => Map.AnimateCamera(CameraUpdateFactory.ZoomTo(1 + View.ZoomLevel));

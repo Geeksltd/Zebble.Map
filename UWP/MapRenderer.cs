@@ -41,8 +41,8 @@
 
             foreach (var a in View.Annotations) await RenderAnnotation(a);
 
-            Result.ZoomLevelChanged += (s, a) => UpdateVisibleRegion();
-            Result.CenterChanged += (s, a) => UpdateVisibleRegion();
+            Result.ZoomLevelChanged += (s, a) => UpdatedVisibleRegion();
+            Result.CenterChanged += (s, a) => UpdatedVisibleRegion();
 
             Result.MapElementClick += Result_MapElementClick;
             Result.Loaded += Result_Loaded;
@@ -72,7 +72,7 @@
                 .WithTimeout(1.Seconds(), timeoutAction: () => Device.Log.Warning("Map.TrySetViewAsync() timed out."));
         }
 
-        void UpdateVisibleRegion()
+        void UpdatedVisibleRegion()
         {
             if (Result == null) return;
 
@@ -86,6 +86,10 @@
             if (bottomRight == null) return;
 
             View.VisibleRegion = new Map.Span(GetGeoLocation(topLeft), GetGeoLocation(bottomLeft), GetGeoLocation(bottomRight));
+
+            var region = GeoRegion.FromCentre(View.VisibleRegion.Center,
+                View.VisibleRegion.LatitudeDegrees, View.VisibleRegion.LongitudeDegrees);
+            View.UserChangedRegion.RaiseOn(Device.ThreadPool, region);
         }
 
         GeoLocation GetGeoLocation(Geopoint point) => new GeoLocation(point.Position.Latitude, point.Position.Longitude);

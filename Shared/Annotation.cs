@@ -8,6 +8,8 @@ namespace Zebble
     {
         public partial class Annotation : IDisposable
         {
+            ImageService.ImageProvider IconProvider;
+
             public readonly AsyncEvent Tapped = new AsyncEvent();
 
             internal void RaiseTapped() => Tapped.RaiseOn(Device.ThreadPool);
@@ -23,7 +25,12 @@ namespace Zebble
 
             public object Native { get; internal set; }
 
-            public void Dispose() => Tapped.Dispose();
+            public void Dispose()
+            {
+                Tapped.Dispose();
+                IconProvider?.UnregisterViewer();
+                IconProvider = null;
+            }
 
             /// <summary>
             /// Path to the pin icon (optional).
@@ -38,6 +45,9 @@ namespace Zebble
             {
                 var result = ImageService.GetImageProvider(IconPath, new Size(IconWidth, IconHeight),
                     Stretch.Fit);
+
+                result.RegisterViewer();
+
                 await result.Result();
                 return result;
             }
