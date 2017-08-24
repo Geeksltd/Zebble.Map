@@ -25,9 +25,17 @@ namespace Zebble
             View.AddedAnnotation.HandleOn(Device.UIThread, a => RenderAnnotation(a));
             View.RemovedAnnotation.HandleOn(Device.UIThread, a => RemoveAnnotation(a));
             View.ApiCenterChanged.HandleOn(Device.UIThread, MoveToRegion);
-            Container = new MapLayout(Renderer.Context) { Id = Android.Views.View.GenerateViewId() };
+            Container = new MapLayout(Renderer.Context) { Id = await FindId(Android.Views.View.GenerateViewId()) };
             await View.WhenShown(() => { Device.UIThread.Run(LoadMap); });
             return Container;
+        }
+
+        Task<int> FindId(int currentId)
+        {
+            var id = currentId;
+            var view = UIRuntime.CurrentActivity.FindViewById(id);
+            while (view != null) view = UIRuntime.CurrentActivity.FindViewById(++id);
+            return Task.FromResult(id++);
         }
 
         Task FixThread() => Task.Delay(Animation.OneFrame);
