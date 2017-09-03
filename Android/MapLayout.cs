@@ -6,7 +6,7 @@
 
     internal class MapLayout : FrameLayout
     {
-        Zebble.ScrollView ScrollView = null;
+        ScrollView ScrollView;
 
         public MapLayout(Context context) : base(context) { }
 

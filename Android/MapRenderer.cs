@@ -13,7 +13,9 @@ namespace Zebble
         MapLayout Container; // The map will be drawn onto this after the page is rendered.
         MapFragment Fragment;
         GoogleMap Map;
+        static int NextId;
         const double DEGREE360 = 360;
+
         public async Task<Android.Views.View> Render(Renderer renderer)
         {
             View = (Map)renderer.View;
@@ -25,17 +27,20 @@ namespace Zebble
             View.AddedAnnotation.HandleOn(Device.UIThread, a => RenderAnnotation(a));
             View.RemovedAnnotation.HandleOn(Device.UIThread, a => RemoveAnnotation(a));
             View.ApiCenterChanged.HandleOn(Device.UIThread, MoveToRegion);
-            Container = new MapLayout(Renderer.Context) { Id = await FindId(Android.Views.View.GenerateViewId()) };
+            Container = new MapLayout(Renderer.Context) { Id = FindFreeId() };
+
             await View.WhenShown(() => { Device.UIThread.Run(LoadMap); });
             return Container;
         }
 
-        Task<int> FindId(int currentId)
+        int FindFreeId()
         {
-            var id = currentId;
-            var view = UIRuntime.CurrentActivity.FindViewById(id);
-            while (view != null) view = UIRuntime.CurrentActivity.FindViewById(++id);
-            return Task.FromResult(id++);
+            NextId++;
+
+            while (UIRuntime.CurrentActivity.FindViewById(NextId) != null)
+                NextId++;
+
+            return NextId;
         }
 
         Task FixThread() => Task.Delay(Animation.OneFrame);
@@ -45,8 +50,14 @@ namespace Zebble
             await Task.Delay(Animation.OneFrame);
             Fragment = CreateFragment(Container, View.RenderOptions());
             await Task.Delay(Animation.OneFrame); // Wait for the fragment to be created.
+            if (IsDisposing()) return;
+
             await CreateMap();
+            if (IsDisposing()) return;
+
             await View.Annotations.WhenAll(RenderAnnotation);
+            if (IsDisposing()) return;
+
             var layoutParams = Fragment.View.LayoutParameters;
             await Task.CompletedTask;
         }
@@ -87,6 +98,8 @@ namespace Zebble
 
         async Task MoveToRegion()
         {
+            if (IsDisposing()) return;
+
             var update = CameraUpdateFactory.NewCameraPosition(CameraPosition.FromLatLngZoom((await View.GetCenter()).Render(), View.ZoomLevel));
             try
             {
@@ -95,12 +108,13 @@ namespace Zebble
             catch (Java.Lang.IllegalStateException exc)
             {
                 Device.Log.Error("MoveToRegion exception: " + exc);
-                Device.Log.Warning($"Zebble AndroidMapView MoveToRegion exception: {exc}");
             }
         }
 
         void OnUserChangedRegion()
         {
+            if (IsDisposing()) return;
+
             var projection = Map?.Projection;
             if (projection == null) return;
             var width = Fragment.View.Width;
@@ -115,33 +129,28 @@ namespace Zebble
             View.UserChangedRegion.RaiseOn(Device.ThreadPool, region);
         }
 
-        void OnApiZoomChanged() => Map.AnimateCamera(CameraUpdateFactory.ZoomTo(1 + View.ZoomLevel));
+        void OnApiZoomChanged() => Map?.AnimateCamera(CameraUpdateFactory.ZoomTo(1 + View.ZoomLevel));
 
         async Task CreateMap()
         {
             var source = new TaskCompletionSource<GoogleMap>();
-            Fragment.GetMapAsync(new MapReadyCallBack(source.SetResult));
+            Fragment?.GetMapAsync(new MapReadyCallBack(source.SetResult));
             Map = await source.Task;
             Map.UiSettings.ZoomControlsEnabled = View.ShowZoomControls;
             Map.UiSettings.ZoomGesturesEnabled = View.Zoomable;
             Map.UiSettings.ScrollGesturesEnabled = View.Pannable;
             Map.UiSettings.RotateGesturesEnabled = View.Rotatable;
             Map.CameraChange += Map_CameraChange;
-            //Map.MarkerClick += Map_MarkerClick;
             Map.InfoWindowClick += Map_InfoWindowClick;
             Map.AnimateCamera(CameraUpdateFactory.NewLatLngZoom(View.Center.Render(), View.ZoomLevel));
         }
 
         void Map_InfoWindowClick(object _, GoogleMap.InfoWindowClickEventArgs e) => RaiseTapped(e.Marker);
 
-        //void Map_MarkerClick(object _, GoogleMap.MarkerClickEventArgs e)
-        //{
-        //    RaiseTapped(e.Marker);
-        //    e.Handled = false;
-        //}
-
         void RaiseTapped(Marker marker)
         {
+            if (IsDisposing()) return;
+
             var annotation = (marker?.Tag as AnnotationRef)?.Annotation;
             if (annotation == null)
                 Device.Log.Error("No map annotation was found for the tapped annotation!");
@@ -153,13 +162,14 @@ namespace Zebble
         {
             Map.Perform(m => m.CameraChange -= Map_CameraChange);
             Map.Perform(m => m.InfoWindowClick -= Map_InfoWindowClick);
-            //Map.Perform(m => m.MarkerClick -= Map_MarkerClick);
+            View = null;
             Map = null;
             Fragment?.Dispose();
             Fragment = null;
-            View = null;
             Container?.Dispose();
             Container = null;
         }
+
+        bool IsDisposing() => View?.IsDisposing != false;
     }
 }
