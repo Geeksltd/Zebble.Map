@@ -1,6 +1,5 @@
 ﻿namespace Zebble
 {
-    using System;
     using MapKit;
     using ObjCRuntime;
     using UIKit;
@@ -22,11 +21,12 @@
                 Annotation = annotation,
                 RightCalloutAccessoryView = CreateCalloutButton(annotation)
             };
-            
+
             var image = (annotation as BasicMapAnnotation)?.Image;
             if (image != null)
             {
                 pin.Image = image;
+                pin.ContentScaleFactor = Device.Screen.HardwareDensity;
                 Device.UIThread.Post(() => pin.Image = image);
                 pin.CenterOffset = new CoreGraphics.CGPoint(0, -image.Size.Height / 2);
             }
