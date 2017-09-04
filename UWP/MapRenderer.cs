@@ -2,11 +2,9 @@
 {
     using System;
     using System.ComponentModel;
-    using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
     using Windows.Devices.Geolocation;
-    using Windows.Storage;
     using Windows.Storage.Streams;
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls.Maps;
@@ -41,9 +39,8 @@
 
             foreach (var a in View.Annotations) await RenderAnnotation(a);
 
-            Result.ZoomLevelChanged += (s, a) => UpdatedVisibleRegion();
-            Result.CenterChanged += (s, a) => UpdatedVisibleRegion();
-
+            Result.ZoomLevelChanged += Result_ZoomLevelChanged;
+            Result.CenterChanged += Result_CenterChanged;
             Result.MapElementClick += Result_MapElementClick;
             Result.Loaded += Result_Loaded;
 
@@ -52,8 +49,14 @@
             return Result;
         }
 
+        void Result_CenterChanged(MapControl _, object __) => UpdatedVisibleRegion();
+
+        void Result_ZoomLevelChanged(MapControl _, object __) => UpdatedVisibleRegion();
+
         void Result_Loaded(object _, RoutedEventArgs __)
         {
+            if (Result == null) return;
+
             Result.Loaded -= Result_Loaded;
             MoveToRegion().RunInParallel();
         }
@@ -68,6 +71,8 @@
 
         async Task MoveToRegion()
         {
+            if (Result == null) return;
+
             await Result.TrySetViewAsync((await View.GetCenter()).Render()).AsTask()
                 .WithTimeout(1.Seconds(), timeoutAction: () => Device.Log.Warning("Map.TrySetViewAsync() timed out."));
         }
@@ -94,10 +99,13 @@
 
         GeoLocation GetGeoLocation(Geopoint point) => new GeoLocation(point.Position.Latitude, point.Position.Longitude);
 
-        Task CalCulate()
+        async Task CalCulate()
         {
-            return Result.TryZoomToAsync(View.ZoomLevel).AsTask()
-                .WithTimeout(1.Seconds(), timeoutAction: () => Device.Log.Warning("Map.TryZoomToAsync() timed out."));
+            if (Result == null) return;
+
+            await Result.TryZoomToAsync(View.ZoomLevel).AsTask()
+                .WithTimeout(1.Seconds(),
+                timeoutAction: () => Device.Log.Warning("Map.TryZoomToAsync() timed out."));
         }
 
         void HandleEvents()
@@ -115,6 +123,8 @@
 
         void ZoomEnabledChanged()
         {
+            if (Result == null) return;
+
             if (View.Zoomable && View.ShowZoomControls) Result.ZoomInteractionMode = MapInteractionMode.GestureAndControl;
             else if (View.Zoomable) Result.ZoomInteractionMode = MapInteractionMode.GestureOnly;
             else if (View.ShowZoomControls) Result.ZoomInteractionMode = MapInteractionMode.ControlOnly;
@@ -123,12 +133,16 @@
 
         void ScrollEnabledChanged()
         {
+            if (Result == null) return;
+
             if (View.Pannable) Result.PanInteractionMode = MapPanInteractionMode.Auto;
             else Result.PanInteractionMode = MapPanInteractionMode.Disabled;
         }
 
         void RotatableChanged()
         {
+            if (Result == null) return;
+
             if (View.Rotatable) Result.RotateInteractionMode = MapInteractionMode.GestureAndControl;
             else Result.RotateInteractionMode = MapInteractionMode.Disabled;
         }
@@ -137,27 +151,25 @@
         {
             foreach (var annotation in View.Annotations)
             {
-                try
-                {
-                    await RenderAnnotation(annotation);
-                }
+                try { await RenderAnnotation(annotation); }
                 catch (Exception ex)
                 {
-                    Device.Log.Error("Failed to render the annotation: " + annotation + Environment.NewLine + Environment.NewLine +
-                        ex.Message);
+                    Device.Log.Error($"Failed to render the annotation: {annotation}\n\n{ex.Message}");
                 }
             }
         }
 
         async Task RenderAnnotation(Map.Annotation annotation)
         {
+            if (Result == null) return;
+
             var poi = new MapIcon
             {
                 Location = annotation.Location.Render(),
                 NormalizedAnchorPoint = new Windows.Foundation.Point(0.5, 1),
                 Title = annotation.Title.OrEmpty(),
                 Visible = true,
-                ZIndex = 0,                
+                ZIndex = 0,
             };
 
             annotation.Native = poi;
@@ -175,6 +187,8 @@
 
         void RemoveAnnotation(Map.Annotation annotation)
         {
+            if (Result == null) return;
+
             var native = annotation.Native as MapElement;
             if (native == null) return;
 
@@ -182,12 +196,23 @@
                 Result.MapElements.Remove(native);
         }
 
-        public void Dispose() => Result = null;
+        public void Dispose()
+        {
+            if (Result != null)
+            {
+                Result.ZoomLevelChanged -= Result_ZoomLevelChanged;
+                Result.CenterChanged -= Result_ZoomLevelChanged;
+                Result.MapElementClick -= Result_MapElementClick;
+                Result.Loaded -= Result_Loaded;
+            }
+
+            Result = null;
+        }
     }
 
     public static class RenderExtensions
     {
-        public static Geopoint Render(this Services.IGeoLocation location)
+        public static Geopoint Render(this IGeoLocation location)
         {
             return new Geopoint(new BasicGeoposition
             {
