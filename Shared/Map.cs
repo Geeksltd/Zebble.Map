@@ -19,10 +19,10 @@ namespace Zebble
         internal readonly AsyncEvent ShowZoomControlsChanged = new AsyncEvent();
         internal readonly AsyncEvent RotatableChanged = new AsyncEvent();
         internal readonly AsyncEvent PannableChanged = new AsyncEvent();
-        internal readonly AsyncEvent<Annotation> AddedAnnotation = new AsyncEvent<Annotation>();
-        internal readonly AsyncEvent<Annotation> RemovedAnnotation = new AsyncEvent<Annotation>();
-        internal readonly AsyncEvent ApiCenterChanged = new AsyncEvent();
-        public readonly AsyncEvent<GeoRegion> UserChangedRegion = new AsyncEvent<GeoRegion>();
+        internal readonly AsyncEvent<Annotation> AddedAnnotation = new AsyncEvent<Annotation>(ConcurrentEventRaisePolicy.Queue);
+        internal readonly AsyncEvent<Annotation> RemovedAnnotation = new AsyncEvent<Annotation>(ConcurrentEventRaisePolicy.Queue);
+        internal readonly AsyncEvent ApiCenterChanged = new AsyncEvent(ConcurrentEventRaisePolicy.Queue);
+        public readonly AsyncEvent<GeoRegion> UserChangedRegion = new AsyncEvent<GeoRegion>(ConcurrentEventRaisePolicy.Queue);
 
         public GeoLocation Center
         {

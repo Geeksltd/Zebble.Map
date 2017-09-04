@@ -157,7 +157,7 @@
                 NormalizedAnchorPoint = new Windows.Foundation.Point(0.5, 1),
                 Title = annotation.Title.OrEmpty(),
                 Visible = true,
-                ZIndex = 0
+                ZIndex = 0,                
             };
 
             annotation.Native = poi;
@@ -166,6 +166,7 @@
             {
                 var provider = await annotation.GetPinImageProvider();
                 var file = await provider.GetExactSizedFile();
+                Device.Log.Message(file.FullName);
                 poi.Image = RandomAccessStreamReference.CreateFromFile(await file.ToStorageFile());
             }
 
