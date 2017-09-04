@@ -36,23 +36,23 @@ namespace Zebble
         int FindFreeId()
         {
             NextId++;
-
-            while (UIRuntime.CurrentActivity.FindViewById(NextId) != null)
-                NextId++;
-
+            while (UIRuntime.CurrentActivity.FindViewById(NextId) != null) NextId++;
             return NextId;
         }
 
-        Task FixThread() => Task.Delay(Animation.OneFrame);
+        /// <summary>The map creation process needs this.</summary>
+        Task ThreadBreath() => Task.Delay(Animation.OneFrame);
 
         async Task LoadMap()
         {
-            await Task.Delay(Animation.OneFrame);
+            await ThreadBreath();
             Fragment = CreateFragment(Container, View.RenderOptions());
-            await Task.Delay(Animation.OneFrame); // Wait for the fragment to be created.
+            await ThreadBreath(); // Wait for the fragment to be created.
             if (IsDisposing()) return;
 
+            await ThreadBreath();
             await CreateMap();
+            await ThreadBreath();
             if (IsDisposing()) return;
 
             await View.Annotations.WhenAll(RenderAnnotation);
@@ -68,6 +68,7 @@ namespace Zebble
             var transaction = UIRuntime.CurrentActivity.FragmentManager.BeginTransaction();
             transaction.Add(view.Id, fragment);
             transaction.Commit();
+
             return fragment;
         }
 
