@@ -40,19 +40,15 @@ namespace Zebble
             return NextId;
         }
 
-        /// <summary>The map creation process needs this.</summary>
-        Task ThreadBreath() => Task.Delay(Animation.OneFrame);
-
         async Task LoadMap()
         {
-            await ThreadBreath();
+            //We should wait until the view id is added to resources dynamically
+            while (UIRuntime.CurrentActivity.FindViewById(Container.Id) == null) await Task.Delay(Animation.OneFrame);
+
             Fragment = CreateFragment(Container, View.RenderOptions());
-            await ThreadBreath(); // Wait for the fragment to be created.
             if (IsDisposing()) return;
 
-            await ThreadBreath();
             await CreateMap();
-            await ThreadBreath();
             if (IsDisposing()) return;
 
             await View.Annotations.WhenAll(RenderAnnotation);
@@ -66,9 +62,10 @@ namespace Zebble
         {
             var fragment = MapFragment.NewInstance(options);
             var transaction = UIRuntime.CurrentActivity.FragmentManager.BeginTransaction();
+
             transaction.Add(view.Id, fragment);
             transaction.Commit();
-
+            UIRuntime.CurrentActivity.FragmentManager.ExecutePendingTransactions();
             return fragment;
         }
 
