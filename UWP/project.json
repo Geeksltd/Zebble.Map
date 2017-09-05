@@ -2,7 +2,7 @@
   "dependencies": {
     "Microsoft.NETCore.UniversalWindowsPlatform": "5.2.3",
     "Newtonsoft.Json": "9.0.1",
-    "Zebble": "4.2.315"
+    "Zebble": "4.2.341"
   },
   "frameworks": {
     "uap10.0": {}
@@ -16,5 +16,6 @@
     "win10-x64-aot": {}
   }
 }
+
 
 
