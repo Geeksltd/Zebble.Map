@@ -161,7 +161,12 @@
 
         async Task RenderAnnotation(Map.Annotation annotation)
         {
-            if (Result == null) return;
+            if (annotation == null || Result == null) return;
+            if (annotation.Location == null)
+            {
+                Device.Log.Warning("annotation's Location is null!");
+                return;
+            }
 
             var poi = new MapIcon
             {
@@ -187,7 +192,7 @@
 
         void RemoveAnnotation(Map.Annotation annotation)
         {
-            if (Result == null) return;
+            if (Result == null || annotation == null) return;
 
             var native = annotation.Native as MapElement;
             if (native == null) return;

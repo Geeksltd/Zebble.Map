@@ -73,6 +73,13 @@ namespace Zebble
 
         async Task RenderAnnotation(Map.Annotation annotation)
         {
+            if (annotation == null) return;
+            if (annotation.Location == null)
+            {
+                Device.Log.Warning("annotation's Location is null!");
+                return;
+            }
+
             var markerOptions = new MarkerOptions();
             markerOptions.SetPosition(annotation.Location.Render());
             markerOptions.SetTitle(annotation.Title.OrEmpty());
@@ -92,7 +99,7 @@ namespace Zebble
             annotation.Native = marker;
         }
 
-        void RemoveAnnotation(Map.Annotation annotation) => (annotation.Native as Marker)?.Remove();
+        void RemoveAnnotation(Map.Annotation annotation) => (annotation?.Native as Marker)?.Remove();
 
         async Task MoveToRegion()
         {

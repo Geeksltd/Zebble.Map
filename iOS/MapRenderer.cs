@@ -79,6 +79,13 @@ namespace Zebble
 
         async Task RenderAnnotation(Map.Annotation annotation)
         {
+            if (annotation == null) return;
+            if (annotation.Location == null)
+            {
+                Device.Log.Warning("annotation's Location is null!");
+                return;
+            }
+
             var native = new BasicMapAnnotation(annotation);
             await native.AwaitImage();
             Result.AddAnnotation(native);
@@ -86,7 +93,7 @@ namespace Zebble
 
         void RemoveAnnotation(Map.Annotation annotation)
         {
-            if (annotation.Native is BasicMapAnnotation native)
+            if (annotation?.Native is BasicMapAnnotation native)
                 Result.RemoveAnnotation(native);
         }
 
