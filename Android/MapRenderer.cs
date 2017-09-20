@@ -80,6 +80,8 @@ namespace Zebble
                 return;
             }
 
+            await AwaitMapCreation();
+
             var markerOptions = new MarkerOptions();
             markerOptions.SetPosition(annotation.Location.Render());
             markerOptions.SetTitle(annotation.Title.OrEmpty());
@@ -99,11 +101,23 @@ namespace Zebble
             annotation.Native = marker;
         }
 
+        async Task AwaitMapCreation()
+        {
+            for (var retry = 10; retry > 0; retry--)
+            {
+                if (Map != null) return;
+                await Task.Delay(50);
+                retry--;
+            }
+        }
+
         void RemoveAnnotation(Map.Annotation annotation) => (annotation?.Native as Marker)?.Remove();
 
         async Task MoveToRegion()
         {
             if (IsDisposing()) return;
+
+            await AwaitMapCreation();
 
             var update = CameraUpdateFactory.NewCameraPosition(CameraPosition.FromLatLngZoom((await View.GetCenter()).Render(), View.ZoomLevel));
             try
