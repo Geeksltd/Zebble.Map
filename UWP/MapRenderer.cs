@@ -1,21 +1,21 @@
 ﻿namespace Zebble
 {
     using System;
+    using System.Collections.Generic;
     using System.ComponentModel;
     using System.Linq;
     using System.Threading.Tasks;
+    using Services;
     using Windows.Devices.Geolocation;
     using Windows.Storage.Streams;
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls.Maps;
-    using Zebble.Services;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     class MapRenderer : INativeRenderer
     {
         Map View;
         MapControl Result;
-        const double DEGREE360 = 360;
 
         public async Task<FrameworkElement> Render(Renderer renderer)
         {
@@ -24,8 +24,6 @@
             {
                 VerticalAlignment = Windows.UI.Xaml.VerticalAlignment.Stretch,
                 HorizontalAlignment = Windows.UI.Xaml.HorizontalAlignment.Stretch,
-                Center = (await View.GetCenter()).Render(),
-                ZoomLevel = View.ZoomLevel
             };
 
             Windows.Services.Maps.MapService.ServiceToken = "HaXjmFYYzKaodYsgdNp2~PK515Syb0c0Z5AeqFmfuWQ~Anxgm-h_lBeSoSpJmDR5JDBovDqEU8wqmirJ4RzVuOvZiHS8uo8NLKE8M9L4ZPYP";
@@ -35,7 +33,7 @@
             ZoomEnabledChanged();
             ScrollEnabledChanged();
             RotatableChanged();
-            await MoveToRegion();
+            await ApplyZoom();
 
             foreach (var a in View.Annotations) await RenderAnnotation(a);
 
@@ -58,7 +56,7 @@
             if (Result == null) return;
 
             Result.Loaded -= Result_Loaded;
-            MoveToRegion().RunInParallel();
+            ApplyZoom().RunInParallel();
         }
 
         void Result_MapElementClick(MapControl sender, MapElementClickEventArgs ev)
@@ -67,14 +65,6 @@
 
             foreach (var marker in markers)
                 View.Annotations.FirstOrDefault(a => a.Native == marker)?.RaiseTapped();
-        }
-
-        async Task MoveToRegion()
-        {
-            if (Result == null) return;
-
-            await Result.TrySetViewAsync((await View.GetCenter()).Render()).AsTask()
-                .WithTimeout(1.Seconds(), timeoutAction: () => Device.Log.Warning("Map.TrySetViewAsync() timed out."));
         }
 
         void UpdatedVisibleRegion()
@@ -99,13 +89,11 @@
 
         GeoLocation GetGeoLocation(Geopoint point) => new GeoLocation(point.Position.Latitude, point.Position.Longitude);
 
-        async Task CalCulate()
+        async Task Calculate()
         {
             if (Result == null) return;
 
-            await Result.TryZoomToAsync(View.ZoomLevel).AsTask()
-                .WithTimeout(1.Seconds(),
-                timeoutAction: () => Device.Log.Warning("Map.TryZoomToAsync() timed out."));
+            await ApplyZoom();
         }
 
         void HandleEvents()
@@ -116,10 +104,10 @@
             View.RotatableChanged.HandleOn(Device.UIThread, () => RotatableChanged());
             View.AddedAnnotation.HandleOn(Device.UIThread, RenderAnnotation);
             View.RemovedAnnotation.HandleOn(Device.UIThread, a => RemoveAnnotation(a));
-            View.ApiCenterChanged.HandleOn(Device.UIThread, MoveToRegion);
+            View.ApiCenterChanged.HandleOn(Device.UIThread, ApplyZoom);
         }
 
-        Task ZoomChanged() => CalCulate();
+        Task ZoomChanged() => Calculate();
 
         void ZoomEnabledChanged()
         {
@@ -145,18 +133,6 @@
 
             if (View.Rotatable) Result.RotateInteractionMode = MapInteractionMode.GestureAndControl;
             else Result.RotateInteractionMode = MapInteractionMode.Disabled;
-        }
-
-        async Task UpdateAnnotations()
-        {
-            foreach (var annotation in View.Annotations)
-            {
-                try { await RenderAnnotation(annotation); }
-                catch (Exception ex)
-                {
-                    Device.Log.Error($"Failed to render the annotation: {annotation}\n\n{ex.Message}");
-                }
-            }
         }
 
         async Task RenderAnnotation(Map.Annotation annotation)
@@ -199,6 +175,49 @@
 
             if (Result.MapElements.Contains(native))
                 Result.MapElements.Remove(native);
+        }
+
+        async Task ApplyZoom()
+        {
+            if (Result == null) return;
+
+            var center = (await View.GetCenter()).Render();
+
+            if (View.ZoomLevel.HasValue)
+            {
+                await Result.TrySetViewAsync(center, View.ZoomLevel.Value).AsTask()
+                    .WithTimeout(1.Seconds(), timeoutAction: () => Device.Log.Warning("Map.TrySetViewAsync() timed out."));
+            }
+            else if (View.Annotations.Any())
+            {
+                var points = new List<Geopoint>
+                {
+                    new Geopoint(new BasicGeoposition
+                    {
+                        Latitude = center.Position.Latitude,
+                        Longitude = center.Position.Longitude
+                    })
+                };
+
+                foreach (var annotation in View.Annotations)
+                {
+                    points.Add(new Geopoint(new BasicGeoposition
+                    {
+                        Latitude = annotation.Location.Latitude,
+                        Longitude = annotation.Location.Longitude
+                    }));
+                }
+
+                var mapScene = MapScene.CreateFromLocations(points);
+
+                await Result.TrySetSceneAsync(mapScene).AsTask()
+                    .WithTimeout(1.Seconds(), timeoutAction: () => Device.Log.Warning("Map.TrySetViewAsync() timed out.")); ;
+            }
+            else
+            {
+                await Result.TrySetViewAsync(center, Map.DefaultZoomLevel).AsTask()
+                    .WithTimeout(1.Seconds(), timeoutAction: () => Device.Log.Warning("Map.TrySetViewAsync() timed out."));
+            }
         }
 
         public void Dispose()
