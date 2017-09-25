@@ -121,7 +121,9 @@ namespace Zebble
 
             await AwaitMapCreation();
 
-            var update = CameraUpdateFactory.NewCameraPosition(CameraPosition.FromLatLngZoom((await View.GetCenter()).Render(), View.ZoomLevel));
+            var update = CameraUpdateFactory.NewCameraPosition(
+                CameraPosition.FromLatLngZoom((await View.GetCenter()).Render(),
+                View.ZoomLevel ?? 10));
             try
             {
                 Device.UIThread.RunAction(() => Map?.AnimateCamera(update));
@@ -180,13 +182,13 @@ namespace Zebble
                 {
                     builder.Include(new LatLng(annotation.Location.Latitude, annotation.Location.Longitude));
                 }
-                
+
                 var bounds = builder.Build();
 
                 var width = Scaler.ToDevice(View.ActualWidth);
                 var height = Scaler.ToDevice(View.ActualHeight);
                 // Offset from edges of the map 10% of screen
-                var padding = (int)(width * 0.10); 
+                var padding = (int)(width * 0.10);
 
                 var cameraUpdate = CameraUpdateFactory.NewLatLngBounds(bounds, width, height, padding);
 
