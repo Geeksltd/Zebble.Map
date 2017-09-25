@@ -4,15 +4,17 @@ namespace Zebble
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
-    using Zebble;
-    using Zebble.Services;
+    using Services;
 
     public partial class Map : View, IRenderedBy<MapRenderer>
     {
+        public const int MinimumZoomLevel = 1;
+        public const int MaximumZoomLevel = 20;
         public static double DefaultLatitude = 51.5074;
         public static double DefaultLongitude = -0.1278;
+        public static int DefaultZoomLevel = 13;
         GeoLocation center;
-        List<Annotation> annotations = new List<Annotation>();
+        readonly List<Annotation> annotations = new List<Annotation>();
         public IEnumerable<Annotation> Annotations => annotations;
         internal readonly AsyncEvent ApiZoomChanged = new AsyncEvent();
         internal readonly AsyncEvent ZoomableChanged = new AsyncEvent();
@@ -35,7 +37,7 @@ namespace Zebble
             }
         }
 
-        int zoomLevel = 13;
+        int? zoomLevel;
         bool zoomable = true;
         bool showZoomControls = false;
         bool rotatable = false;
@@ -44,12 +46,12 @@ namespace Zebble
         /// <summary>
         /// The map zoom level from 1 to 20. Default is 13. The higher, the more zoomed (close up).
         /// </summary>
-        public int ZoomLevel
+        public int? ZoomLevel
         {
             get => zoomLevel;
             set
             {
-                zoomLevel = zoomLevel.LimitWithin(1, 20);
+                zoomLevel = zoomLevel?.LimitWithin(MinimumZoomLevel, MaximumZoomLevel);
                 if (zoomLevel == value) return;
                 zoomLevel = value;
                 ApiZoomChanged.Raise();

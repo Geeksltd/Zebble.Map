@@ -2,9 +2,11 @@ namespace Zebble
 {
     using System;
     using System.ComponentModel;
+    using System.Linq;
     using System.Threading.Tasks;
     using Android.Gms.Maps;
     using Android.Gms.Maps.Model;
+    using AndroidOS;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     internal class MapRenderer : INativeRenderer
@@ -14,7 +16,6 @@ namespace Zebble
         MapFragment Fragment;
         GoogleMap Map;
         static int NextId;
-        const double DEGREE360 = 360;
 
         public async Task<Android.Views.View> Render(Renderer renderer)
         {
@@ -23,7 +24,7 @@ namespace Zebble
             View.ZoomableChanged.HandleOn(Device.UIThread, () => Map.UiSettings.ZoomControlsEnabled = View.Zoomable);
             View.PannableChanged.HandleOn(Device.UIThread, () => Map.UiSettings.ScrollGesturesEnabled = View.Pannable);
             View.PannableChanged.HandleOn(Device.UIThread, () => Map.UiSettings.RotateGesturesEnabled = View.Rotatable);
-            View.ApiZoomChanged.HandleOn(Device.UIThread, () => Map.AnimateCamera(CameraUpdateFactory.ZoomBy(View.ZoomLevel)));
+            View.ApiZoomChanged.HandleOn(Device.UIThread, () => Map.AnimateCamera(CameraUpdateFactory.ZoomBy(View.ZoomLevel.Value)));
             View.AddedAnnotation.HandleOn(Device.UIThread, a => RenderAnnotation(a));
             View.RemovedAnnotation.HandleOn(Device.UIThread, a => RemoveAnnotation(a));
             View.ApiCenterChanged.HandleOn(Device.UIThread, MoveToRegion);
@@ -55,6 +56,7 @@ namespace Zebble
             if (IsDisposing()) return;
 
             var layoutParams = Fragment.View.LayoutParameters;
+
             await Task.CompletedTask;
         }
 
@@ -148,8 +150,6 @@ namespace Zebble
             View.UserChangedRegion.RaiseOn(Device.ThreadPool, region);
         }
 
-        void OnApiZoomChanged() => Map?.AnimateCamera(CameraUpdateFactory.ZoomTo(1 + View.ZoomLevel));
-
         async Task CreateMap()
         {
             var source = new TaskCompletionSource<GoogleMap>();
@@ -161,7 +161,41 @@ namespace Zebble
             Map.UiSettings.RotateGesturesEnabled = View.Rotatable;
             Map.CameraChange += Map_CameraChange;
             Map.InfoWindowClick += Map_InfoWindowClick;
-            Map.AnimateCamera(CameraUpdateFactory.NewLatLngZoom(View.Center.Render(), View.ZoomLevel));
+
+            ApplyZoom();
+        }
+
+        void ApplyZoom()
+        {
+            if (View.ZoomLevel.HasValue)
+            {
+                Map.AnimateCamera(CameraUpdateFactory.NewLatLngZoom(View.Center.Render(), View.ZoomLevel.Value));
+            }
+            else if (View.Annotations.Any())
+            {
+                var builder = new LatLngBounds.Builder();
+                builder.Include(new LatLng(View.Center.Latitude, View.Center.Longitude));
+
+                foreach (var annotation in View.Annotations)
+                {
+                    builder.Include(new LatLng(annotation.Location.Latitude, annotation.Location.Longitude));
+                }
+                
+                var bounds = builder.Build();
+
+                var width = Scaler.ToDevice(View.ActualWidth);
+                var height = Scaler.ToDevice(View.ActualHeight);
+                // Offset from edges of the map 10% of screen
+                var padding = (int)(width * 0.10); 
+
+                var cameraUpdate = CameraUpdateFactory.NewLatLngBounds(bounds, width, height, padding);
+
+                Map.AnimateCamera(cameraUpdate);
+            }
+            else
+            {
+                Map.AnimateCamera(CameraUpdateFactory.NewLatLngZoom(View.Center.Render(), Zebble.Map.DefaultZoomLevel));
+            }
         }
 
         void Map_InfoWindowClick(object _, GoogleMap.InfoWindowClickEventArgs e) => RaiseTapped(e.Marker);
