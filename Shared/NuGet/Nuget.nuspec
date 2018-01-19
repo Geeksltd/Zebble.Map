@@ -2,16 +2,23 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
   <metadata>
     <id>Zebble.Map</id>
-    <version>4.3.128</version>
+    <version>4.3.129</version>
     <title>Map for Zebble (Xamarin)</title>
     <projectUrl>https://github.com/Geeksltd/Zebble.Map</projectUrl>
     <iconUrl>https://raw.githubusercontent.com/Geeksltd/Zebble.Map/master/Shared/Icon.png</iconUrl>
-    <copyright>Copyright ©2017 Geeks Ltd - All rights reserved.</copyright>
+    <copyright>Copyright © 2018 Geeks Ltd - All rights reserved.</copyright>
     <description>Native Map component for Zebble apps.</description>
     <authors>Geeks Ltd</authors>
     <dependencies>
       <group targetFramework="MonoAndroid10">
         <dependency id="Xamarin.GooglePlayServices.Maps" version="42.1021.1" />
+        <dependency id="Zebble.Location" version="1.0.104" />
+      </group>
+      <group targetFramework="Xamarin.iOS10">
+        <dependency id="Zebble.Location" version="1.0.104" />
+      </group>
+      <group targetFramework="UAP10">
+        <dependency id="Zebble.Location" version="1.0.104" />
       </group>
     </dependencies>
   </metadata>
