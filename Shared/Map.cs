@@ -5,6 +5,7 @@ namespace Zebble
     using System.Linq;
     using System.Threading.Tasks;
     using Services;
+    using Zebble.Device;
 
     public partial class Map : View, IRenderedBy<MapRenderer>
     {
@@ -33,7 +34,7 @@ namespace Zebble
             {
                 if (center == value) return;
                 center = value;
-                ApiCenterChanged.RaiseOn(Device.UIThread);
+                ApiCenterChanged.RaiseOn(Thread.UI);
             }
         }
 
@@ -119,7 +120,7 @@ namespace Zebble
             }
             else
             {
-                var location = await Device.Location.GetCurrentPosition(desiredAccuracy: 1000);
+                var location = await Location.GetCurrentPosition(desiredAccuracy: 1000);
                 if (location == null)
                     return new GeoLocation(DefaultLatitude, DefaultLongitude);
                 return location;

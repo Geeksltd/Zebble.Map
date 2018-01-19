@@ -52,18 +52,18 @@ namespace Zebble
             var bottomLeft = Result.ConvertPoint(new CoreGraphics.CGPoint(x: 0, y: Result.Bounds.Height), toCoordinateFromView: Result);
             var bottomRight = Result.ConvertPoint(new CoreGraphics.CGPoint(x: Result.Bounds.Width, y: Result.Bounds.Height), toCoordinateFromView: Result);
             View.VisibleRegion = new Map.Span(GetGeoLocation(topLeft), GetGeoLocation(bottomLeft), GetGeoLocation(bottomRight));
-            View.UserChangedRegion.RaiseOn(Device.ThreadPool, region);
+            View.UserChangedRegion.RaiseOn(Thread.Pool, region);
         }
 
         void HandleEvents()
         {
-            View.ZoomableChanged.HandleActionOn(Device.UIThread, () => Result.ZoomEnabled = CanZoom());
-            View.ApiZoomChanged.HandleOn(Device.UIThread, () => ApplyZoom());
-            View.PannableChanged.HandleOn(Device.UIThread, () => Result.ScrollEnabled = View.Pannable);
-            View.RotatableChanged.HandleOn(Device.UIThread, () => Result.RotateEnabled = View.Rotatable);
-            View.AddedAnnotation.HandleOn(Device.UIThread, a => RenderAnnotation(a));
-            View.RemovedAnnotation.HandleOn(Device.UIThread, a => RemoveAnnotation(a));
-            View.ApiCenterChanged.HandleOn(Device.UIThread, async () => Result.CenterCoordinate = await GetCenter());
+            View.ZoomableChanged.HandleActionOn(Thread.UI, () => Result.ZoomEnabled = CanZoom());
+            View.ApiZoomChanged.HandleOn(Thread.UI, () => ApplyZoom());
+            View.PannableChanged.HandleOn(Thread.UI, () => Result.ScrollEnabled = View.Pannable);
+            View.RotatableChanged.HandleOn(Thread.UI, () => Result.RotateEnabled = View.Rotatable);
+            View.AddedAnnotation.HandleOn(Thread.UI, a => RenderAnnotation(a));
+            View.RemovedAnnotation.HandleOn(Thread.UI, a => RemoveAnnotation(a));
+            View.ApiCenterChanged.HandleOn(Thread.UI, async () => Result.CenterCoordinate = await GetCenter());
             Result.RegionChanged += IosMap_RegionChanged;
         }
 
@@ -117,10 +117,10 @@ namespace Zebble
                 // Add a little extra space on the sides
                 region.Span.LatitudeDelta =
                     Math.Abs(topLeftCoord.Latitude - bottomRightCoord.Latitude) * 1.1;
-                
+
                 // Add a little extra space on the sides
                 region.Span.LongitudeDelta =
-                    Math.Abs(bottomRightCoord.Longitude - topLeftCoord.Longitude) * 1.1; 
+                    Math.Abs(bottomRightCoord.Longitude - topLeftCoord.Longitude) * 1.1;
 
                 var defaultRegion = new MKCoordinateRegion(region.Center, Result.GetSpan(Map.DefaultZoomLevel));
                 if (region.Span.LatitudeDelta < defaultRegion.Span.LatitudeDelta ||

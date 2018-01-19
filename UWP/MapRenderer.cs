@@ -84,7 +84,7 @@
 
             var region = GeoRegion.FromCentre(View.VisibleRegion.Center,
                 View.VisibleRegion.LatitudeDegrees, View.VisibleRegion.LongitudeDegrees);
-            View.UserChangedRegion.RaiseOn(Device.ThreadPool, region);
+            View.UserChangedRegion.RaiseOn(Thread.Pool, region);
         }
 
         GeoLocation GetGeoLocation(Geopoint point) => new GeoLocation(point.Position.Latitude, point.Position.Longitude);
@@ -98,13 +98,13 @@
 
         void HandleEvents()
         {
-            View.ApiZoomChanged.HandleOn(Device.UIThread, ZoomChanged);
-            View.ZoomableChanged.HandleOn(Device.UIThread, () => ZoomEnabledChanged());
-            View.PannableChanged.HandleOn(Device.UIThread, () => ScrollEnabledChanged());
-            View.RotatableChanged.HandleOn(Device.UIThread, () => RotatableChanged());
-            View.AddedAnnotation.HandleOn(Device.UIThread, RenderAnnotation);
-            View.RemovedAnnotation.HandleOn(Device.UIThread, a => RemoveAnnotation(a));
-            View.ApiCenterChanged.HandleOn(Device.UIThread, ApplyZoom);
+            View.ApiZoomChanged.HandleOn(Thread.UI, ZoomChanged);
+            View.ZoomableChanged.HandleOn(Thread.UI, () => ZoomEnabledChanged());
+            View.PannableChanged.HandleOn(Thread.UI, () => ScrollEnabledChanged());
+            View.RotatableChanged.HandleOn(Thread.UI, () => RotatableChanged());
+            View.AddedAnnotation.HandleOn(Thread.UI, RenderAnnotation);
+            View.RemovedAnnotation.HandleOn(Thread.UI, a => RemoveAnnotation(a));
+            View.ApiCenterChanged.HandleOn(Thread.UI, ApplyZoom);
         }
 
         Task ZoomChanged() => Calculate();

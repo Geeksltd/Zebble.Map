@@ -12,7 +12,7 @@ namespace Zebble
 
             public readonly AsyncEvent Tapped = new AsyncEvent(ConcurrentEventRaisePolicy.Ignore);
 
-            internal void RaiseTapped() => Tapped.RaiseOn(Device.ThreadPool);
+            internal void RaiseTapped() => Tapped.RaiseOn(Thread.Pool);
 
             public string Title { get; set; } = string.Empty;
 

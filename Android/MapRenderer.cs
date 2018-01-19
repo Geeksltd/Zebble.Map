@@ -20,17 +20,17 @@ namespace Zebble
         public async Task<Android.Views.View> Render(Renderer renderer)
         {
             View = (Map)renderer.View;
-            View.ShowZoomControlsChanged.HandleOn(Device.UIThread, () => Map.UiSettings.ZoomControlsEnabled = View.ShowZoomControls);
-            View.ZoomableChanged.HandleOn(Device.UIThread, () => Map.UiSettings.ZoomControlsEnabled = View.Zoomable);
-            View.PannableChanged.HandleOn(Device.UIThread, () => Map.UiSettings.ScrollGesturesEnabled = View.Pannable);
-            View.PannableChanged.HandleOn(Device.UIThread, () => Map.UiSettings.RotateGesturesEnabled = View.Rotatable);
-            View.ApiZoomChanged.HandleOn(Device.UIThread, () => Map.AnimateCamera(CameraUpdateFactory.ZoomBy(View.ZoomLevel.Value)));
-            View.AddedAnnotation.HandleOn(Device.UIThread, a => RenderAnnotation(a));
-            View.RemovedAnnotation.HandleOn(Device.UIThread, a => RemoveAnnotation(a));
-            View.ApiCenterChanged.HandleOn(Device.UIThread, MoveToRegion);
+            View.ShowZoomControlsChanged.HandleOn(Thread.UI, () => Map.UiSettings.ZoomControlsEnabled = View.ShowZoomControls);
+            View.ZoomableChanged.HandleOn(Thread.UI, () => Map.UiSettings.ZoomControlsEnabled = View.Zoomable);
+            View.PannableChanged.HandleOn(Thread.UI, () => Map.UiSettings.ScrollGesturesEnabled = View.Pannable);
+            View.PannableChanged.HandleOn(Thread.UI, () => Map.UiSettings.RotateGesturesEnabled = View.Rotatable);
+            View.ApiZoomChanged.HandleOn(Thread.UI, () => Map.AnimateCamera(CameraUpdateFactory.ZoomBy(View.ZoomLevel.Value)));
+            View.AddedAnnotation.HandleOn(Thread.UI, a => RenderAnnotation(a));
+            View.RemovedAnnotation.HandleOn(Thread.UI, a => RemoveAnnotation(a));
+            View.ApiCenterChanged.HandleOn(Thread.UI, MoveToRegion);
             Container = new MapLayout(Renderer.Context) { Id = FindFreeId() };
 
-            await View.WhenShown(() => { Device.UIThread.Run(LoadMap); });
+            await View.WhenShown(() => { Thread.UI.Run(LoadMap); });
             return Container;
         }
 
@@ -126,7 +126,7 @@ namespace Zebble
                 View.ZoomLevel ?? 10));
             try
             {
-                Device.UIThread.RunAction(() => Map?.AnimateCamera(update));
+                Thread.UI.RunAction(() => Map?.AnimateCamera(update));
             }
             catch (Java.Lang.IllegalStateException exc)
             {
@@ -149,7 +149,7 @@ namespace Zebble
 
             var region = Services.GeoRegion.FromCentre(View.VisibleRegion.Center,
                 View.VisibleRegion.LatitudeDegrees, View.VisibleRegion.LongitudeDegrees);
-            View.UserChangedRegion.RaiseOn(Device.ThreadPool, region);
+            View.UserChangedRegion.RaiseOn(Thread.Pool, region);
         }
 
         async Task CreateMap()

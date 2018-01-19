@@ -27,7 +27,7 @@
             {
                 pin.Image = image;
                 pin.ContentScaleFactor = Device.Screen.HardwareDensity;
-                Device.UIThread.Post(() => pin.Image = image);
+                Thread.UI.Post(() => pin.Image = image);
                 pin.CenterOffset = new CoreGraphics.CGPoint(0, -image.Size.Height / 2);
             }
 
