@@ -2,8 +2,8 @@
   "dependencies": {
     "Microsoft.NETCore.UniversalWindowsPlatform": "6.0.6",
     "Newtonsoft.Json": "9.0.1",
-    "Zebble": "4.3.100",
-    "Zebble.Location": "1.0.104"
+    "Zebble": "4.4.101",
+    "Zebble.Location": "1.0.105"
   },
   "frameworks": {
     "uap10.0.10240": {}
