@@ -169,34 +169,38 @@ namespace Zebble
 
         void ApplyZoom()
         {
+            var center = View.Center ?? View.GetCenter().GetAwaiter().GetResult();
+
             if (View.ZoomLevel.HasValue)
             {
-                Map.AnimateCamera(CameraUpdateFactory.NewLatLngZoom(View.Center.Render(), View.ZoomLevel.Value));
+                Map.AnimateCamera(CameraUpdateFactory.NewLatLngZoom(center.Render(), View.ZoomLevel.Value));
             }
             else if (View.Annotations.Any())
             {
-                var builder = new LatLngBounds.Builder();
-                builder.Include(new LatLng(View.Center.Latitude, View.Center.Longitude));
-
-                foreach (var annotation in View.Annotations)
+                using (var builder = new LatLngBounds.Builder())
                 {
-                    builder.Include(new LatLng(annotation.Location.Latitude, annotation.Location.Longitude));
+                    builder.Include(new LatLng(center.Latitude, center.Longitude));
+
+                    foreach (var annotation in View.Annotations)
+                    {
+                        builder.Include(new LatLng(annotation.Location.Latitude, annotation.Location.Longitude));
+                    }
+
+                    var bounds = builder.Build();
+
+                    var width = Scaler.ToDevice(View.ActualWidth);
+                    var height = Scaler.ToDevice(View.ActualHeight);
+                    // Offset from edges of the map 10% of screen
+                    var padding = (int)(width * 0.10);
+
+                    var cameraUpdate = CameraUpdateFactory.NewLatLngBounds(bounds, width, height, padding);
+
+                    Map.AnimateCamera(cameraUpdate);
                 }
-
-                var bounds = builder.Build();
-
-                var width = Scaler.ToDevice(View.ActualWidth);
-                var height = Scaler.ToDevice(View.ActualHeight);
-                // Offset from edges of the map 10% of screen
-                var padding = (int)(width * 0.10);
-
-                var cameraUpdate = CameraUpdateFactory.NewLatLngBounds(bounds, width, height, padding);
-
-                Map.AnimateCamera(cameraUpdate);
             }
             else
             {
-                Map.AnimateCamera(CameraUpdateFactory.NewLatLngZoom(View.Center.Render(), Zebble.Map.DefaultZoomLevel));
+                Map.AnimateCamera(CameraUpdateFactory.NewLatLngZoom(center.Render(), Zebble.Map.DefaultZoomLevel));
             }
         }
 
