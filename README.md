@@ -1,4 +1,4 @@
-[logo]: https://raw.githubusercontent.com/Geeksltd/Zebble.Map/master/Shared/NuGet/Icon.png "Zebble.Map"
+[logo]: https://raw.githubusercontent.com/Geeksltd/Zebble.Map/master/Shared/Icon.png "Zebble.Map"
 
 
 ## Zebble.Map
