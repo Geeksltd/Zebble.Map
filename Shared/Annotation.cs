@@ -8,7 +8,7 @@ namespace Zebble
     {
         public partial class Annotation : IDisposable
         {
-            ImageService.ImageProvider IconProvider;
+            ImageService.ImageSource IconProvider;
 
             public readonly AsyncEvent Tapped = new AsyncEvent(ConcurrentEventRaisePolicy.Ignore);
 
@@ -41,9 +41,9 @@ namespace Zebble
 
             public float IconHeight { get; set; } = 60;
 
-            internal async Task<ImageService.ImageProvider> GetPinImageProvider()
+            internal async Task<ImageService.ImageSource> GetPinImageProvider()
             {
-                var result = ImageService.GetImageProvider(IconPath, new Size(IconWidth, IconHeight),
+                var result = ImageService.GetSource(IconPath, new Size(IconWidth, IconHeight),
                     Stretch.Fit);
 
                 result.RegisterViewer();
