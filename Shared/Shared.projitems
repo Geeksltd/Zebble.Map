@@ -14,8 +14,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Map.Distance.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Map.Span.cs" />
     <None Include="$(MSBuildThisFileDirectory)Icon.png" />
-    <None Include="$(MSBuildThisFileDirectory)NuGet\%40CreatePackage.bat" />
-    <None Include="$(MSBuildThisFileDirectory)NuGet\NuGet.exe" />
     <None Include="$(MSBuildThisFileDirectory)NuGet\Nuget.nuspec" />
   </ItemGroup>
 </Project>
