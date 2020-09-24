@@ -33,9 +33,6 @@
             ZoomEnabledChanged();
             ScrollEnabledChanged();
             RotatableChanged();
-            await ApplyZoom();
-
-            foreach (var a in View.Annotations) await RenderAnnotation(a);
 
             Result.ZoomLevelChanged += Result_ZoomLevelChanged;
             Result.CenterChanged += Result_CenterChanged;
@@ -43,6 +40,12 @@
             Result.Loaded += Result_Loaded;
 
             HandleEvents();
+
+            Thread.UI.Post(async () =>
+            {
+                await ApplyZoom();
+                foreach (var a in View.Annotations) await RenderAnnotation(a);
+            });
 
             return Result;
         }

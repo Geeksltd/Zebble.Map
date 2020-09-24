@@ -30,7 +30,11 @@ namespace Zebble
             View.ApiCenterChanged.HandleOn(Thread.UI, MoveToRegion);
             Container = new MapLayout(Renderer.Context) { Id = FindFreeId() };
 
-            await View.WhenShown(() => { Thread.UI.Run(LoadMap); });
+            Thread.UI.Post(async () =>
+            {
+                await View.WhenShown(() => { Thread.UI.Run(LoadMap); });
+            });
+                
             return Container;
         }
 

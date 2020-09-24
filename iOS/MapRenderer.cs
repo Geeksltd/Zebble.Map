@@ -27,16 +27,21 @@ namespace Zebble
                 ScrollEnabled = View.Pannable,
                 RotateEnabled = View.Rotatable,
                 ZoomEnabled = CanZoom(),
-                CenterCoordinate = await GetCenter()
+                
             };
 
             ApplyZoom();
             HandleEvents();
 
-            // Load annotations:
-            using (var mapDelegate = new IosMapDelegate(View))
-                Result.GetViewForAnnotation = mapDelegate.GetViewForAnnotation;
-            await View.Annotations.WhenAll(RenderAnnotation);
+            Thread.UI.Post(async () =>
+            {
+                Result.CenterCoordinate = await GetCenter();
+
+                // Load annotations:
+                using (var mapDelegate = new IosMapDelegate(View))
+                    Result.GetViewForAnnotation = mapDelegate.GetViewForAnnotation;
+                await View.Annotations.WhenAll(RenderAnnotation);
+            });
 
             return Result;
         }
