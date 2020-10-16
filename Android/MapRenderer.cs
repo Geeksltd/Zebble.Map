@@ -32,7 +32,7 @@ namespace Zebble
 
             Thread.UI.Post(async () =>
             {
-                await View.WhenShown(() => { Thread.UI.Run(LoadMap); });
+                await LoadMap();
             });
                 
             return Container;
@@ -168,12 +168,12 @@ namespace Zebble
             Map.CameraChange += Map_CameraChange;
             Map.InfoWindowClick += Map_InfoWindowClick;
 
-            ApplyZoom();
+            await ApplyZoom();
         }
 
-        void ApplyZoom()
+        async Task ApplyZoom()
         {
-            var center = View.Center ?? View.GetCenter().GetAwaiter().GetResult();
+            var center = View.Center ?? await View.GetCenter();
 
             if (View.ZoomLevel.HasValue)
             {
@@ -192,8 +192,8 @@ namespace Zebble
 
                     var bounds = builder.Build();
 
-                    var width = Scaler.ToDevice(View.ActualWidth);
-                    var height = Scaler.ToDevice(View.ActualHeight);
+                    var width = Zebble.Device.Scale.ToDevice(View.ActualWidth);
+                    var height = Zebble.Device.Scale.ToDevice(View.ActualHeight);
                     // Offset from edges of the map 10% of screen
                     var padding = (int)(width * 0.10);
 
