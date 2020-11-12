@@ -14,6 +14,8 @@ namespace Zebble
         public static double DefaultLatitude = 51.5074;
         public static double DefaultLongitude = -0.1278;
         public static int DefaultZoomLevel = 13;
+        public readonly AsyncEvent<GeoLocation> MapTapped = new AsyncEvent<GeoLocation>(); 
+        public readonly AsyncEvent<GeoLocation> MapLongPressed = new AsyncEvent<GeoLocation>();
         GeoLocation center;
         readonly List<Annotation> annotations = new List<Annotation>();
         public IEnumerable<Annotation> Annotations => annotations;

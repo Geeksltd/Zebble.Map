@@ -108,6 +108,12 @@
             View.AddedAnnotation.HandleOn(Thread.UI, RenderAnnotation);
             View.RemovedAnnotation.HandleOn(Thread.UI, a => RemoveAnnotation(a));
             View.ApiCenterChanged.HandleOn(Thread.UI, ApplyZoom);
+            Result.MapTapped += Result_MapTapped;
+        }
+
+        private void Result_MapTapped(MapControl sender, MapInputEventArgs args)
+        {
+            View.MapTapped.RaiseOn(Thread.UI, new GeoLocation(args.Location.Position.Latitude, args.Location.Position.Longitude));
         }
 
         Task ZoomChanged() => Calculate();

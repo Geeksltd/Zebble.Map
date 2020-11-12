@@ -70,6 +70,13 @@ namespace Zebble
             View.RemovedAnnotation.HandleOn(Thread.UI, a => RemoveAnnotation(a));
             View.ApiCenterChanged.HandleOn(Thread.UI, async () => Result.CenterCoordinate = await GetCenter());
             Result.RegionChanged += IosMap_RegionChanged;
+            Result.AddGestureRecognizer(new UITapGestureRecognizer(action: (uiTapGestureRecognizer) =>
+            {
+                var location = uiTapGestureRecognizer.LocationInView(Result);
+                var coordinate = Result.ConvertPoint(location, Result);
+
+                View.MapTapped.RaiseOn(Thread.UI, new GeoLocation(coordinate.Latitude, coordinate.Longitude));
+            }));
         }
 
         bool CanZoom() => View.Zoomable || View.ShowZoomControls;

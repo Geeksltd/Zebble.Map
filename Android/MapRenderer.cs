@@ -7,6 +7,7 @@ namespace Zebble
     using Android.Gms.Maps;
     using Android.Gms.Maps.Model;
     using AndroidOS;
+    using Zebble.Services;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     internal class MapRenderer : INativeRenderer
@@ -167,8 +168,19 @@ namespace Zebble
             Map.UiSettings.RotateGesturesEnabled = View.Rotatable;
             Map.CameraChange += Map_CameraChange;
             Map.InfoWindowClick += Map_InfoWindowClick;
-
+            Map.MapClick += Map_MapClick;
+            Map.MapLongClick += Map_MapLongClick;
             await ApplyZoom();
+        }
+
+        private void Map_MapLongClick(object sender, GoogleMap.MapLongClickEventArgs e)
+        {
+            View.MapLongPressed.RaiseOn(Thread.UI, new GeoLocation(e.Point.Latitude, e.Point.Longitude));
+        }
+
+        void Map_MapClick(object sender, GoogleMap.MapClickEventArgs e)
+        {
+            View.MapTapped.RaiseOn(Thread.UI, new GeoLocation(e.Point.Latitude, e.Point.Longitude));
         }
 
         async Task ApplyZoom()
