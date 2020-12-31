@@ -7,8 +7,9 @@ namespace Zebble
     using System.Threading.Tasks;
     using CoreLocation;
     using MapKit;
-    using Services;
     using UIKit;
+    using Olive;
+    using Olive.GeoLocation;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     class MapRenderer : INativeRenderer
@@ -27,7 +28,7 @@ namespace Zebble
                 ScrollEnabled = View.Pannable,
                 RotateEnabled = View.Rotatable,
                 ZoomEnabled = CanZoom(),
-                
+
             };
 
             ApplyZoom();
@@ -38,9 +39,9 @@ namespace Zebble
                 Result.CenterCoordinate = await GetCenter();
 
                 // Load annotations:
-                using (var mapDelegate = new IosMapDelegate(View))
+                using (var mapDelegate = new MapDelegate(View))
                     Result.GetViewForAnnotation = mapDelegate.GetViewForAnnotation;
-                await View.Annotations.WhenAll(RenderAnnotation);
+                await View.Annotations.AwaitAll(RenderAnnotation);
             });
 
             return Result;
@@ -50,7 +51,7 @@ namespace Zebble
 
         void IosMap_RegionChanged(object sender, MKMapViewChangeEventArgs e)
         {
-            var centre = new GeoLocation { Latitude = Result.Region.Center.Latitude, Longitude = Result.Region.Center.Longitude };
+            var centre = new GeoLocation(Result.Region.Center.Latitude, Result.Region.Center.Longitude);
 
             var region = GeoRegion.FromCentre(centre, Result.Region.Span.LatitudeDelta, Result.Region.Span.LongitudeDelta);
             var topLeft = Result.ConvertPoint(new CoreGraphics.CGPoint(x: 0, y: 0), toCoordinateFromView: Result);
@@ -81,7 +82,11 @@ namespace Zebble
 
         bool CanZoom() => View.Zoomable || View.ShowZoomControls;
 
-        async Task<CLLocationCoordinate2D> GetCenter() => (await View.GetCenter()).Render();
+        async Task<CLLocationCoordinate2D> GetCenter()
+        {
+            var center = await View.GetCenter();
+            return new CLLocationCoordinate2D(center.Latitude, center.Longitude);
+        }
 
         /// <summary>Sets the map region based on its center and zoom.</summary>
         async void ApplyZoom()

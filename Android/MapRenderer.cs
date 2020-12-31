@@ -6,11 +6,11 @@ namespace Zebble
     using System.Threading.Tasks;
     using Android.Gms.Maps;
     using Android.Gms.Maps.Model;
-    using AndroidOS;
-    using Zebble.Services;
+    using Olive;
+    using Olive.GeoLocation;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal class MapRenderer : INativeRenderer
+    class MapRenderer : INativeRenderer
     {
         Map View;
         MapLayout Container; // The map will be drawn onto this after the page is rendered.
@@ -35,7 +35,7 @@ namespace Zebble
             {
                 await LoadMap();
             });
-                
+
             return Container;
         }
 
@@ -57,7 +57,7 @@ namespace Zebble
             await CreateMap();
             if (IsDisposing()) return;
 
-            await View.Annotations.WhenAll(RenderAnnotation);
+            await View.Annotations.AwaitAll(RenderAnnotation);
             if (IsDisposing()) return;
 
             var layoutParams = Fragment.View.LayoutParameters;
@@ -152,7 +152,7 @@ namespace Zebble
             var bottomRight = projection.FromScreenLocation(new Android.Graphics.Point(width, height));
             View.VisibleRegion = new Map.Span(topLeft.ToZebble(), bottomLeft.ToZebble(), bottomRight.ToZebble());
 
-            var region = Services.GeoRegion.FromCentre(View.VisibleRegion.Center,
+            var region = GeoRegion.FromCentre(View.VisibleRegion.Center,
                 View.VisibleRegion.LatitudeDegrees, View.VisibleRegion.LongitudeDegrees);
             View.UserChangedRegion.RaiseOn(Thread.Pool, region);
         }
@@ -173,7 +173,7 @@ namespace Zebble
             await ApplyZoom();
         }
 
-        private void Map_MapLongClick(object sender, GoogleMap.MapLongClickEventArgs e)
+        void Map_MapLongClick(object sender, GoogleMap.MapLongClickEventArgs e)
         {
             View.MapLongPressed.RaiseOn(Thread.UI, new GeoLocation(e.Point.Latitude, e.Point.Longitude));
         }

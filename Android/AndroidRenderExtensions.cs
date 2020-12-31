@@ -2,7 +2,7 @@ namespace Zebble
 {
     using Android.Gms.Maps;
     using Android.Gms.Maps.Model;
-    using Zebble.Services;
+    using Olive.GeoLocation;
 
     static class AndroidRenderExtensions
     {

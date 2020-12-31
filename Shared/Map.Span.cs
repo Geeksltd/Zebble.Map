@@ -1,7 +1,8 @@
 namespace Zebble
 {
     using System;
-    using Zebble.Services;
+    using Olive;
+    using Olive.GeoLocation;
 
     partial class Map
     {
@@ -16,7 +17,7 @@ namespace Zebble
                 BottomLeft = bottomLeft;
                 BottomRight = bottomRight;
                 Center = new GeoLocation(topLeft.Latitude - bottomRight.Latitude, topLeft.Longitude - bottomRight.Longitude);
-                TopRight = new GeoLocation { Latitude = Center.Latitude + (Center.Latitude - bottomLeft.Latitude), Longitude = Center.Longitude + (Center.Longitude - bottomLeft.Longitude) };
+                TopRight = new GeoLocation(Center.Latitude + (Center.Latitude - bottomLeft.Latitude), Center.Longitude + (Center.Longitude - bottomLeft.Longitude));
             }
 
             public GeoLocation TopLeft { get; }

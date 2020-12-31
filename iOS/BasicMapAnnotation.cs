@@ -1,12 +1,12 @@
 namespace Zebble
 {
-    using System;
     using System.Threading.Tasks;
     using CoreLocation;
     using MapKit;
     using UIKit;
+    using Olive;
 
-    internal class BasicMapAnnotation : MKAnnotation
+    class BasicMapAnnotation : MKAnnotation
     {
         CLLocationCoordinate2D coordinate;
         public Map.Annotation View { get; private set; }

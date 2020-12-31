@@ -3,6 +3,7 @@
     using System;
     using CoreLocation;
     using MapKit;
+    using Olive;
 
     static class RegionCalculator
     {
@@ -33,7 +34,7 @@
             var centerPixelY = map.CenterCoordinate.ToPixelSpaceY();
 
             // determine the scale value from the zoom level            
-            var zoomScale = 2.ToThePowerOf(1 + (20 - zoomLevel));
+            var zoomScale = 2.0.ToThePowerOf(1 + (20 - zoomLevel));
 
             // scale the map’s size in pixel space
             var mapSizeInPixels = map.Bounds.Size;

@@ -3,6 +3,7 @@ namespace Zebble
     using System;
     using System.Threading.Tasks;
     using Zebble.Services;
+    using Olive.GeoLocation;
 
     partial class Map
     {

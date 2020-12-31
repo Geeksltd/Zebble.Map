@@ -5,11 +5,12 @@
     using System.ComponentModel;
     using System.Linq;
     using System.Threading.Tasks;
-    using Services;
     using Windows.Devices.Geolocation;
     using Windows.Storage.Streams;
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls.Maps;
+    using Olive;
+    using Olive.GeoLocation;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     class MapRenderer : INativeRenderer
@@ -111,9 +112,9 @@
             Result.MapTapped += Result_MapTapped;
         }
 
-        private void Result_MapTapped(MapControl sender, MapInputEventArgs args)
+        void Result_MapTapped(MapControl sender, MapInputEventArgs args)
         {
-            View.MapTapped.RaiseOn(Thread.UI, new GeoLocation(args.Location.Position.Latitude, args.Location.Position.Longitude));
+            View.MapTapped.RaiseOn(Thread.UI, new GeoLocation( args.Location.Position.Latitude, args.Location.Position.Longitude));
         }
 
         Task ZoomChanged() => Calculate();

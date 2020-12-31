@@ -4,7 +4,7 @@
     using Android.Views;
     using Android.Widget;
 
-    internal class MapLayout : FrameLayout
+    class MapLayout : FrameLayout
     {
         ScrollView ScrollView;
 

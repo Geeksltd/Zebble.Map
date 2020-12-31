@@ -1,11 +1,11 @@
 namespace Zebble
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
-    using Services;
     using Zebble.Device;
+    using Olive;
+    using Olive.GeoLocation;
 
     public partial class Map : View, IRenderedBy<MapRenderer>
     {
@@ -14,7 +14,7 @@ namespace Zebble
         public static double DefaultLatitude = 51.5074;
         public static double DefaultLongitude = -0.1278;
         public static int DefaultZoomLevel = 13;
-        public readonly AsyncEvent<GeoLocation> MapTapped = new AsyncEvent<GeoLocation>(); 
+        public readonly AsyncEvent<GeoLocation> MapTapped = new AsyncEvent<GeoLocation>();
         public readonly AsyncEvent<GeoLocation> MapLongPressed = new AsyncEvent<GeoLocation>();
         GeoLocation center;
         readonly List<Annotation> annotations = new List<Annotation>();
@@ -147,7 +147,7 @@ namespace Zebble
             }
         }
 
-        public Task ClearAnnotations() => annotations.ToArray().WhenAll(x => Remove(x));
+        public Task ClearAnnotations() => annotations.ToArray().AwaitAll(x => Remove(x));
 
         public override void Dispose()
         {
