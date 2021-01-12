@@ -24,7 +24,7 @@ namespace Zebble
             {
                 if (miles < 0)
                 {
-                    Log.For<Distance>().Error(null, "Negative values for distance not supported");
+                    Log.For<Distance>().Error("Negative values for distance not supported");
                     miles = 0;
                 }
 
@@ -35,7 +35,7 @@ namespace Zebble
             {
                 if (meters < 0)
                 {
-                    Log.For<Distance>().Error(null, "Negative values for distance not supported");
+                    Log.For<Distance>().Error("Negative values for distance not supported");
                     meters = 0;
                 }
 
@@ -46,7 +46,7 @@ namespace Zebble
             {
                 if (kilometers < 0)
                 {
-                    Log.For<Distance>().Error(null, "Negative values for distance not supported");
+                    Log.For<Distance>().Error("Negative values for distance not supported");
                     kilometers = 0;
                 }
 

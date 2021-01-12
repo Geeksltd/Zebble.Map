@@ -228,7 +228,7 @@ namespace Zebble
 
             var annotation = (marker?.Tag as AnnotationRef)?.Annotation;
             if (annotation == null)
-                Log.For(this).Error(null, "No map annotation was found for the tapped annotation!");
+                Log.For(this).Error("No map annotation was found for the tapped annotation!");
             else
                 annotation.RaiseTapped();
         }
