@@ -163,7 +163,7 @@ namespace Zebble
             if (annotation == null) return;
             if (annotation.Location == null)
             {
-                Device.Log.Warning("annotation's Location is null!");
+                Log.For(this).Warning("annotation's Location is null!");
                 return;
             }
 

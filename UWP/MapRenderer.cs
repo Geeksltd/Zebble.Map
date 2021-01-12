@@ -150,7 +150,7 @@
             if (annotation == null || Result == null) return;
             if (annotation.Location == null)
             {
-                Device.Log.Warning("annotation's Location is null!");
+                Log.For(this).Warning("annotation's Location is null!");
                 return;
             }
 
@@ -169,7 +169,7 @@
             {
                 var provider = await annotation.GetPinImageProvider();
                 var file = await provider.GetExactSizedFile();
-                Device.Log.Message(file.FullName);
+                Log.For(this).Debug(file.FullName);
                 poi.Image = RandomAccessStreamReference.CreateFromFile(await file.ToStorageFile());
             }
 
@@ -196,7 +196,7 @@
             if (View.ZoomLevel.HasValue)
             {
                 await Result.TrySetViewAsync(center, View.ZoomLevel.Value).AsTask()
-                    .WithTimeout(1.Seconds(), timeoutAction: () => Device.Log.Warning("Map.TrySetViewAsync() timed out."));
+                    .WithTimeout(1.Seconds(), timeoutAction: () => Log.For(this).Warning("Map.TrySetViewAsync() timed out."));
             }
             else if (View.Annotations.Any())
             {
@@ -221,12 +221,12 @@
                 var mapScene = MapScene.CreateFromLocations(points);
 
                 await Result.TrySetSceneAsync(mapScene).AsTask()
-                    .WithTimeout(1.Seconds(), timeoutAction: () => Device.Log.Warning("Map.TrySetViewAsync() timed out.")); ;
+                    .WithTimeout(1.Seconds(), timeoutAction: () => Log.For(this).Warning("Map.TrySetViewAsync() timed out.")); ;
             }
             else
             {
                 await Result.TrySetViewAsync(center, Map.DefaultZoomLevel).AsTask()
-                    .WithTimeout(1.Seconds(), timeoutAction: () => Device.Log.Warning("Map.TrySetViewAsync() timed out."));
+                    .WithTimeout(1.Seconds(), timeoutAction: () => Log.For(this).Warning("Map.TrySetViewAsync() timed out."));
             }
         }
 

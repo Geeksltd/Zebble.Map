@@ -1,5 +1,7 @@
 namespace Zebble
 {
+    using Olive;
+
     partial class Map
     {
         public struct Distance
@@ -22,7 +24,7 @@ namespace Zebble
             {
                 if (miles < 0)
                 {
-                    Device.Log.Error("Negative values for distance not supported");
+                    Log.For<Distance>().Error(null, "Negative values for distance not supported");
                     miles = 0;
                 }
 
@@ -33,7 +35,7 @@ namespace Zebble
             {
                 if (meters < 0)
                 {
-                    Device.Log.Error("Negative values for distance not supported");
+                    Log.For<Distance>().Error(null, "Negative values for distance not supported");
                     meters = 0;
                 }
 
@@ -44,7 +46,7 @@ namespace Zebble
             {
                 if (kilometers < 0)
                 {
-                    Device.Log.Error("Negative values for distance not supported");
+                    Log.For<Distance>().Error(null, "Negative values for distance not supported");
                     kilometers = 0;
                 }
 

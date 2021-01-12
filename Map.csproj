@@ -67,7 +67,7 @@
     <None Remove="Zebble-LicenseAgreement.txt" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Zebble.Location" Version="1.0.118" />
+    <PackageReference Include="Zebble.Location" Version="1.0.119" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Android\" />

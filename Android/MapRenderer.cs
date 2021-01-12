@@ -83,7 +83,7 @@ namespace Zebble
             if (annotation == null) return;
             if (annotation.Location == null)
             {
-                Device.Log.Warning("annotation's Location is null!");
+                Log.For(this).Warning("annotation's Location is null!");
                 return;
             }
 
@@ -135,7 +135,7 @@ namespace Zebble
             }
             catch (Java.Lang.IllegalStateException exc)
             {
-                Device.Log.Error("MoveToRegion exception: " + exc);
+                Log.For(this).Error(exc, "MoveToRegion exception.");
             }
         }
 
@@ -228,7 +228,7 @@ namespace Zebble
 
             var annotation = (marker?.Tag as AnnotationRef)?.Annotation;
             if (annotation == null)
-                Device.Log.Error("No map annotation was found for the tapped annotation!");
+                Log.For(this).Error(null, "No map annotation was found for the tapped annotation!");
             else
                 annotation.RaiseTapped();
         }
