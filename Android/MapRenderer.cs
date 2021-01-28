@@ -29,6 +29,7 @@ namespace Zebble
             View.AddedAnnotation.HandleOn(Thread.UI, a => RenderAnnotation(a));
             View.RemovedAnnotation.HandleOn(Thread.UI, a => RemoveAnnotation(a));
             View.ApiCenterChanged.HandleOn(Thread.UI, MoveToRegion);
+            View.MapTypeChanged.HandleOn(Thread.UI, () => Map.MapType = GetMapType());
             Container = new MapLayout(Renderer.Context) { Id = FindFreeId() };
 
             Thread.UI.Post(async () =>
@@ -46,6 +47,19 @@ namespace Zebble
             return NextId;
         }
 
+        int GetMapType()
+        {
+            switch (View.MapType)
+            {
+                case MapTypes.Satelite:
+                    return GoogleMap.MapTypeSatellite;
+                case MapTypes.Hybrid:
+                    return GoogleMap.MapTypeHybrid;
+                default:
+                    return GoogleMap.MapTypeNormal;
+            }
+        }
+
         async Task LoadMap()
         {
             //We should wait until the view id is added to resources dynamically
@@ -61,6 +75,8 @@ namespace Zebble
             if (IsDisposing()) return;
 
             var layoutParams = Fragment.View.LayoutParameters;
+
+            Map.MapType = GetMapType();
 
             await Task.CompletedTask;
         }

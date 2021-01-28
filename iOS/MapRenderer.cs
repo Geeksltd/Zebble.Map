@@ -28,7 +28,7 @@ namespace Zebble
                 ScrollEnabled = View.Pannable,
                 RotateEnabled = View.Rotatable,
                 ZoomEnabled = CanZoom(),
-
+                MapType = GetMapType()
             };
 
             ApplyZoom();
@@ -70,6 +70,7 @@ namespace Zebble
             View.AddedAnnotation.HandleOn(Thread.UI, a => RenderAnnotation(a));
             View.RemovedAnnotation.HandleOn(Thread.UI, a => RemoveAnnotation(a));
             View.ApiCenterChanged.HandleOn(Thread.UI, async () => Result.CenterCoordinate = await GetCenter());
+            View.MapTypeChanged.HandleOn(Thread.UI, () => Result.MapType = GetMapType());
             Result.RegionChanged += IosMap_RegionChanged;
             Result.AddGestureRecognizer(new UITapGestureRecognizer(action: (uiTapGestureRecognizer) =>
             {
@@ -86,6 +87,19 @@ namespace Zebble
         {
             var center = await View.GetCenter();
             return new CLLocationCoordinate2D(center.Latitude, center.Longitude);
+        }
+
+        MKMapType GetMapType()
+        {
+            switch (View.MapType)
+            {
+                case MapTypes.Satelite:
+                    return MKMapType.Satellite;
+                case MapTypes.Hybrid:
+                    return MKMapType.Hybrid;
+                default:
+                    return MKMapType.Standard;
+            }
         }
 
         /// <summary>Sets the map region based on its center and zoom.</summary>

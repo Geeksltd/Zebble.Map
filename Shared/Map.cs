@@ -7,6 +7,13 @@ namespace Zebble
     using Olive;
     using Olive.GeoLocation;
 
+    public enum MapTypes
+    {
+        Street = 0,
+        Satelite = 1,
+        Hybrid = 2
+    }
+
     public partial class Map : View, IRenderedBy<MapRenderer>
     {
         public const int MinimumZoomLevel = 1;
@@ -27,7 +34,20 @@ namespace Zebble
         internal readonly AsyncEvent<Annotation> AddedAnnotation = new AsyncEvent<Annotation>(ConcurrentEventRaisePolicy.Queue);
         internal readonly AsyncEvent<Annotation> RemovedAnnotation = new AsyncEvent<Annotation>(ConcurrentEventRaisePolicy.Queue);
         internal readonly AsyncEvent ApiCenterChanged = new AsyncEvent(ConcurrentEventRaisePolicy.Queue);
+        internal readonly AsyncEvent MapTypeChanged = new AsyncEvent(ConcurrentEventRaisePolicy.Queue);
         public readonly AsyncEvent<GeoRegion> UserChangedRegion = new AsyncEvent<GeoRegion>(ConcurrentEventRaisePolicy.Queue);
+        MapTypes mapType;
+
+        public MapTypes MapType
+        {
+            get => mapType;
+            set
+            {
+                if (mapType == value) return;
+                mapType = value;
+                MapTypeChanged.RaiseOn(Thread.UI);
+            }
+        }
 
         public GeoLocation Center
         {
@@ -159,6 +179,7 @@ namespace Zebble
             RemovedAnnotation?.Dispose();
             ShowZoomControlsChanged?.Dispose();
             ApiCenterChanged?.Dispose();
+            MapTypeChanged?.Dispose();
             RotatableChanged?.Dispose();
             annotations.Do(x => x.Dispose());
             annotations.Clear();

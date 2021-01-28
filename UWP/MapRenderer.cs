@@ -34,6 +34,7 @@
             ZoomEnabledChanged();
             ScrollEnabledChanged();
             RotatableChanged();
+            Result.Style = GetMapType();
 
             Result.ZoomLevelChanged += Result_ZoomLevelChanged;
             Result.CenterChanged += Result_CenterChanged;
@@ -109,12 +110,26 @@
             View.AddedAnnotation.HandleOn(Thread.UI, RenderAnnotation);
             View.RemovedAnnotation.HandleOn(Thread.UI, a => RemoveAnnotation(a));
             View.ApiCenterChanged.HandleOn(Thread.UI, ApplyZoom);
+            View.MapTypeChanged.HandleOn(Thread.UI, () => Result.Style = GetMapType());
             Result.MapTapped += Result_MapTapped;
+        }
+
+        MapStyle GetMapType()
+        {
+            switch (View.MapType)
+            {
+                case MapTypes.Satelite:
+                    return MapStyle.Aerial;
+                case MapTypes.Hybrid:
+                    return MapStyle.Road;
+                default:
+                    return MapStyle.None;
+            }
         }
 
         void Result_MapTapped(MapControl sender, MapInputEventArgs args)
         {
-            View.MapTapped.RaiseOn(Thread.UI, new GeoLocation( args.Location.Position.Latitude, args.Location.Position.Longitude));
+            View.MapTapped.RaiseOn(Thread.UI, new GeoLocation(args.Location.Position.Latitude, args.Location.Position.Longitude));
         }
 
         Task ZoomChanged() => Calculate();
