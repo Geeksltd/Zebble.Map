@@ -7,7 +7,7 @@
     <RootNamespace>Zebble</RootNamespace>
     <PackageId>Zebble.Map</PackageId>
     <Product>$(AssemblyName) ($(TargetFramework))</Product>
-    <Version>4.3.144.0</Version>
+    <Version>4.3.145.0</Version>
     <PackOnBuild>true</PackOnBuild>
     <NeutralLanguage>en</NeutralLanguage>
     <LangVersion>default</LangVersion>
