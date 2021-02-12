@@ -26,7 +26,6 @@ namespace Zebble
         GeoLocation center;
         readonly List<Annotation> annotations = new List<Annotation>();
         public IEnumerable<Annotation> Annotations => annotations;
-        internal readonly AsyncEvent ApiZoomChanged = new AsyncEvent();
         internal readonly AsyncEvent ZoomableChanged = new AsyncEvent();
         internal readonly AsyncEvent ShowZoomControlsChanged = new AsyncEvent();
         internal readonly AsyncEvent RotatableChanged = new AsyncEvent();
@@ -60,7 +59,6 @@ namespace Zebble
             }
         }
 
-        int? zoomLevel;
         bool zoomable = true;
         bool showZoomControls = false;
         bool rotatable = false;
@@ -69,17 +67,7 @@ namespace Zebble
         /// <summary>
         /// The map zoom level from 1 to 20. Default is 13. The higher, the more zoomed (close up).
         /// </summary>
-        public int? ZoomLevel
-        {
-            get => zoomLevel;
-            set
-            {
-                zoomLevel = zoomLevel?.LimitWithin(MinimumZoomLevel, MaximumZoomLevel);
-                if (zoomLevel == value) return;
-                zoomLevel = value;
-                ApiZoomChanged.Raise();
-            }
-        }
+        public TwoWayBindable<int> ZoomLevel = new(13);
 
         public bool Zoomable
         {
@@ -172,7 +160,6 @@ namespace Zebble
         public override void Dispose()
         {
             UserChangedRegion?.Dispose();
-            ApiZoomChanged?.Dispose();
             ZoomableChanged?.Dispose();
             PannableChanged?.Dispose();
             AddedAnnotation?.Dispose();

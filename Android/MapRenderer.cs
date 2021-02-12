@@ -25,7 +25,7 @@ namespace Zebble
             View.ZoomableChanged.HandleOn(Thread.UI, () => Map.UiSettings.ZoomControlsEnabled = View.Zoomable);
             View.PannableChanged.HandleOn(Thread.UI, () => Map.UiSettings.ScrollGesturesEnabled = View.Pannable);
             View.PannableChanged.HandleOn(Thread.UI, () => Map.UiSettings.RotateGesturesEnabled = View.Rotatable);
-            View.ApiZoomChanged.HandleOn(Thread.UI, () => Map.AnimateCamera(CameraUpdateFactory.ZoomBy(View.ZoomLevel.Value)));
+            View.ZoomLevel.ChangedBySource += () => Thread.UI.Run(() => Map.AnimateCamera(CameraUpdateFactory.ZoomBy(View.ZoomLevel.Value)));
             View.AddedAnnotation.HandleOn(Thread.UI, a => RenderAnnotation(a));
             View.RemovedAnnotation.HandleOn(Thread.UI, a => RemoveAnnotation(a));
             View.ApiCenterChanged.HandleOn(Thread.UI, MoveToRegion);
@@ -144,7 +144,7 @@ namespace Zebble
 
             var update = CameraUpdateFactory.NewCameraPosition(
                 CameraPosition.FromLatLngZoom((await View.GetCenter()).Render(),
-                View.ZoomLevel ?? 10));
+                View.ZoomLevel.Value));
             try
             {
                 Thread.UI.RunAction(() => Map?.AnimateCamera(update));
@@ -203,7 +203,7 @@ namespace Zebble
         {
             var center = View.Center ?? await View.GetCenter();
 
-            if (View.ZoomLevel.HasValue)
+            if (View.ZoomLevel.Value != default)
             {
                 Map.AnimateCamera(CameraUpdateFactory.NewLatLngZoom(center.Render(), View.ZoomLevel.Value));
             }

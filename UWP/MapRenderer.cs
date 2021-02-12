@@ -103,7 +103,7 @@
 
         void HandleEvents()
         {
-            View.ApiZoomChanged.HandleOn(Thread.UI, ZoomChanged);
+            View.ZoomLevel.ChangedBySource += () => Thread.UI.Run(Calculate);
             View.ZoomableChanged.HandleOn(Thread.UI, () => ZoomEnabledChanged());
             View.PannableChanged.HandleOn(Thread.UI, () => ScrollEnabledChanged());
             View.RotatableChanged.HandleOn(Thread.UI, () => RotatableChanged());
@@ -131,8 +131,6 @@
         {
             View.MapTapped.RaiseOn(Thread.UI, new GeoLocation(args.Location.Position.Latitude, args.Location.Position.Longitude));
         }
-
-        Task ZoomChanged() => Calculate();
 
         void ZoomEnabledChanged()
         {
@@ -208,7 +206,7 @@
 
             var center = (await View.GetCenter()).Render();
 
-            if (View.ZoomLevel.HasValue)
+            if (View.ZoomLevel.Value != default)
             {
                 await Result.TrySetViewAsync(center, View.ZoomLevel.Value).AsTask()
                     .WithTimeout(1.Seconds(), timeoutAction: () => Log.For(this).Warning("Map.TrySetViewAsync() timed out."));

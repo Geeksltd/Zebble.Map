@@ -64,7 +64,7 @@ namespace Zebble
         void HandleEvents()
         {
             View.ZoomableChanged.HandleActionOn(Thread.UI, () => Result.ZoomEnabled = CanZoom());
-            View.ApiZoomChanged.HandleOn(Thread.UI, () => ApplyZoom());
+            View.ZoomLevel.ChangedBySource += () => Thread.UI.Run(ApplyZoom);
             View.PannableChanged.HandleOn(Thread.UI, () => Result.ScrollEnabled = View.Pannable);
             View.RotatableChanged.HandleOn(Thread.UI, () => Result.RotateEnabled = View.Rotatable);
             View.AddedAnnotation.HandleOn(Thread.UI, a => RenderAnnotation(a));
@@ -107,7 +107,7 @@ namespace Zebble
         {
             var center = await GetCenter();
 
-            if (View.ZoomLevel.HasValue)
+            if (View.ZoomLevel.Value != default)
             {
                 Result.CenterCoordinate = center;
 

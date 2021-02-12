@@ -6,7 +6,7 @@
     <RootNamespace>Zebble</RootNamespace>
     <PackageId>Zebble.Map</PackageId>
     <Product>$(AssemblyName) ($(TargetFramework))</Product>
-    <Version>4.3.145.0</Version>
+    <Version>4.4.1.0</Version>
     <PackOnBuild>true</PackOnBuild>
     <NeutralLanguage>en</NeutralLanguage>
     <DefineConstants>$(DefineConstants);</DefineConstants>
@@ -65,6 +65,7 @@
     <None Remove="Zebble-LicenseAgreement.txt" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Olive" Version="2.1.220" />
     <PackageReference Include="Zebble.Location" Version="1.0.121" />
   </ItemGroup>
   <ItemGroup>
