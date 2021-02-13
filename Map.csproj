@@ -1,6 +1,6 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras/3.0.23">
   <PropertyGroup>
-    <TargetFrameworks>Xamarin.iOS10;MonoAndroid90</TargetFrameworks>
+    <TargetFrameworks>Xamarin.iOS10;MonoAndroid90;netcoreapp3.1</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);uap10.0.18362</TargetFrameworks>
     <AssemblyName>Zebble.Map</AssemblyName>
     <RootNamespace>Zebble</RootNamespace>
@@ -9,7 +9,7 @@
     <Version>4.4.1.0</Version>
     <PackOnBuild>true</PackOnBuild>
     <NeutralLanguage>en</NeutralLanguage>
-    <DefineConstants>$(DefineConstants);</DefineConstants>
+    <DefineConstants>$(DefineConstants)</DefineConstants>
     <UseFullSemVerForNuGet>false</UseFullSemVerForNuGet>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <LangVersion>latest</LangVersion>
@@ -36,16 +36,19 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" $(TargetFramework.StartsWith('uap10.0')) ">
-    <DefineConstants>UWP</DefineConstants>
+    <DefineConstants>$(DefineConstants);UWP</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" $(TargetFramework.StartsWith('MonoAndroid')) ">
-    <DefineConstants>ANDROID</DefineConstants>
+    <DefineConstants>$(DefineConstants);ANDROID</DefineConstants>
     <AndroidUseIntermediateDesignerFile>false</AndroidUseIntermediateDesignerFile>
   </PropertyGroup>
   <PropertyGroup Condition=" $(TargetFramework.StartsWith('Xamarin.iOS')) ">
-    <DefineConstants>IOS</DefineConstants>
+    <DefineConstants>$(DefineConstants);IOS</DefineConstants>
   </PropertyGroup>
-  <ItemGroup>
+  <PropertyGroup Condition=" $(TargetFramework.StartsWith('netcoreapp')) ">
+    <DefineConstants>$(DefineConstants);NETCOREAPP</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('netcoreapp'))==false ">
     <Compile Include="Shared\**\*.cs" />
   </ItemGroup>
   <ItemGroup Condition=" $(TargetFramework.StartsWith('uap10.0')) ">
@@ -59,6 +62,9 @@
     <Compile Include="iOS\**\*.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ViewModel\**\*.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <None Remove=".gitignore" />
     <None Remove="icon.png" />
     <None Remove="README.md" />
@@ -66,11 +72,12 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Olive" Version="2.1.220" />
-    <PackageReference Include="Zebble.Location" Version="1.0.121" />
+    <PackageReference Include="Zebble.Location" Version="1.0.121" Condition=" $(TargetFramework.StartsWith('netcoreapp'))==false " />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Android\" />
     <Folder Include="iOS\" />
     <Folder Include="UWP\" />
+    <Folder Include="ViewModel\" />
   </ItemGroup>
 </Project>
