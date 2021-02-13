@@ -1,18 +1,15 @@
 namespace Zebble
 {
-    partial class Map
+    partial class Annotation
     {
-        partial class Annotation
-        {
-            internal bool Flat { get; set; }
-        }
+        internal bool Flat { get; set; }
     }
 
     class AnnotationRef : Java.Lang.Object
     {
-        internal Map.Annotation Annotation;
+        internal Annotation Annotation;
 
-        public AnnotationRef(Map.Annotation annotation) => Annotation = annotation;
+        public AnnotationRef(Annotation annotation) => Annotation = annotation;
 
         protected override void Dispose(bool disposing)
         {

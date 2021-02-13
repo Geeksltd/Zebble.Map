@@ -9,10 +9,10 @@ namespace Zebble
     class BasicMapAnnotation : MKAnnotation
     {
         CLLocationCoordinate2D coordinate;
-        public Map.Annotation View { get; private set; }
+        public Annotation View { get; private set; }
         internal UIImage Image;
 
-        public BasicMapAnnotation(Map.Annotation view)
+        public BasicMapAnnotation(Annotation view)
         {
             View = view;
             View.Native = this;

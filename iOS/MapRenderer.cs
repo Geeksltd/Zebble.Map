@@ -10,23 +10,24 @@ namespace Zebble
     using UIKit;
     using Olive;
     using Olive.GeoLocation;
+    using Zebble.Mvvm;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     class MapRenderer : INativeRenderer
     {
-        Map View;
+        MapView View;
         MKMapView Result;
 
         List<object> ActionList = new List<object>();
 
         public async Task<UIView> Render(Renderer renderer)
         {
-            View = (Map)renderer.View;
+            View = (MapView)renderer.View;
             Result = new MKMapView
             {
                 Frame = View.GetFrame(),
-                ScrollEnabled = View.Pannable,
-                RotateEnabled = View.Rotatable,
+                ScrollEnabled = View.Map.Pannable.Value,
+                RotateEnabled = View.Map.Rotatable.Value,
                 ZoomEnabled = CanZoom(),
                 MapType = GetMapType()
             };
@@ -41,7 +42,7 @@ namespace Zebble
                 // Load annotations:
                 using (var mapDelegate = new MapDelegate(View))
                     Result.GetViewForAnnotation = mapDelegate.GetViewForAnnotation;
-                await View.Annotations.AwaitAll(RenderAnnotation);
+                await View.Map.Annotations.AwaitAll(RenderAnnotation);
             });
 
             return Result;
@@ -57,20 +58,20 @@ namespace Zebble
             var topLeft = Result.ConvertPoint(new CoreGraphics.CGPoint(x: 0, y: 0), toCoordinateFromView: Result);
             var bottomLeft = Result.ConvertPoint(new CoreGraphics.CGPoint(x: 0, y: Result.Bounds.Height), toCoordinateFromView: Result);
             var bottomRight = Result.ConvertPoint(new CoreGraphics.CGPoint(x: Result.Bounds.Width, y: Result.Bounds.Height), toCoordinateFromView: Result);
-            View.VisibleRegion = new RadialRegion(GetGeoLocation(topLeft), GetGeoLocation(bottomLeft), GetGeoLocation(bottomRight));
-            View.UserChangedRegion.RaiseOn(Thread.Pool, region);
+            View.Map.VisibleRegion.Set(new RadialRegion(GetGeoLocation(topLeft), GetGeoLocation(bottomLeft), GetGeoLocation(bottomRight)));
+            View.Map.CenterOfVisibleRegion.Set(region);
         }
 
         void HandleEvents()
         {
-            View.ZoomableChanged.HandleActionOn(Thread.UI, () => Result.ZoomEnabled = CanZoom());
-            View.ZoomLevel.ChangedBySource += () => Thread.UI.Run(ApplyZoom);
-            View.PannableChanged.HandleOn(Thread.UI, () => Result.ScrollEnabled = View.Pannable);
-            View.RotatableChanged.HandleOn(Thread.UI, () => Result.RotateEnabled = View.Rotatable);
-            View.AddedAnnotation.HandleOn(Thread.UI, a => RenderAnnotation(a));
-            View.RemovedAnnotation.HandleOn(Thread.UI, a => RemoveAnnotation(a));
-            View.ApiCenterChanged.HandleOn(Thread.UI, async () => Result.CenterCoordinate = await GetCenter());
-            View.MapTypeChanged.HandleOn(Thread.UI, () => Result.MapType = GetMapType());
+            View.Map.Zoomable.ChangedBySource += () => Thread.UI.Run(() => Result.ZoomEnabled = CanZoom());
+            View.Map.ZoomLevel.ChangedBySource += () => Thread.UI.Run(ApplyZoom);
+            View.Map.Pannable.ChangedBySource += () => Thread.UI.Run(() => Result.ScrollEnabled = View.Map.Pannable.Value);
+            View.Map.Rotatable.ChangedBySource += () => Thread.UI.Run(() => Result.RotateEnabled = View.Map.Rotatable.Value);
+            View.Map.Annotations.Added += a => Thread.UI.Run(() => RenderAnnotation(a));
+            View.Map.Annotations.Removing += a => Thread.UI.Run(() => RemoveAnnotation(a));
+            View.Map.Center.ChangedBySource += () => Thread.UI.Run(async () => Result.CenterCoordinate = await GetCenter());
+            View.Map.MapType.ChangedBySource += () => Thread.UI.Run(() => Result.MapType = GetMapType());
             Result.RegionChanged += IosMap_RegionChanged;
             Result.AddGestureRecognizer(new UITapGestureRecognizer(action: (uiTapGestureRecognizer) =>
             {
@@ -81,7 +82,7 @@ namespace Zebble
             }));
         }
 
-        bool CanZoom() => View.Zoomable || View.ShowZoomControls;
+        bool CanZoom() => View.Map.Zoomable.Value || View.Map.ShowZoomControls.Value;
 
         async Task<CLLocationCoordinate2D> GetCenter()
         {
@@ -91,7 +92,7 @@ namespace Zebble
 
         MKMapType GetMapType()
         {
-            switch (View.MapType)
+            switch (View.Map.MapType.Value)
             {
                 case MapTypes.Satelite:
                     return MKMapType.Satellite;
@@ -107,14 +108,14 @@ namespace Zebble
         {
             var center = await GetCenter();
 
-            if (View.ZoomLevel.Value != default)
+            if (View.Map.ZoomLevel.Value != default)
             {
                 Result.CenterCoordinate = center;
 
-                var mapRegion = new MKCoordinateRegion(Result.CenterCoordinate, Result.GetSpan(View.ZoomLevel.Value));
+                var mapRegion = new MKCoordinateRegion(Result.CenterCoordinate, Result.GetSpan(View.Map.ZoomLevel.Value));
                 Result.SetRegion(mapRegion, animated: true);
             }
-            else if (View.Annotations.Any())
+            else if (View.Map.Annotations.Any())
             {
                 CLLocationCoordinate2D topLeftCoord;
                 topLeftCoord.Latitude = -90;
@@ -130,7 +131,7 @@ namespace Zebble
                 bottomRightCoord.Longitude = Math.Max(bottomRightCoord.Longitude, center.Longitude);
                 bottomRightCoord.Latitude = Math.Min(bottomRightCoord.Latitude, center.Latitude);
 
-                foreach (var annotation in View.Annotations)
+                foreach (var annotation in View.Map.Annotations)
                 {
                     topLeftCoord.Longitude = Math.Min(topLeftCoord.Longitude, annotation.Location.Longitude);
                     topLeftCoord.Latitude = Math.Max(topLeftCoord.Latitude, annotation.Location.Latitude);
@@ -172,7 +173,7 @@ namespace Zebble
             }
         }
 
-        async Task RenderAnnotation(Map.Annotation annotation)
+        async Task RenderAnnotation(Annotation annotation)
         {
             if (annotation == null) return;
             if (annotation.Location == null)
@@ -186,7 +187,7 @@ namespace Zebble
             Result.AddAnnotation(native);
         }
 
-        void RemoveAnnotation(Map.Annotation annotation)
+        void RemoveAnnotation(Annotation annotation)
         {
             if (annotation?.Native is BasicMapAnnotation native)
                 Result.RemoveAnnotation(native);

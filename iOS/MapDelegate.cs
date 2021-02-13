@@ -7,9 +7,9 @@
 
     class MapDelegate : MKMapViewDelegate
     {
-        Map Map;
+        MapView View;
 
-        internal MapDelegate(Map map) => Map = map;
+        internal MapDelegate(MapView view) => View = view;
 
         public override MKAnnotationView GetViewForAnnotation(MKMapView mapView, IMKAnnotation annotation)
         {
@@ -59,9 +59,7 @@
         protected override void Dispose(bool disposing)
         {
             if (disposing)
-            {
-                Map = null;
-            }
+                View = null;
 
             base.Dispose(disposing);
         }

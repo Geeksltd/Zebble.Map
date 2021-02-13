@@ -11,15 +11,15 @@ namespace Zebble
             return new LatLng(coordinate.Latitude, coordinate.Longitude);
         }
 
-        public static GoogleMapOptions RenderOptions(this Map map)
+        public static GoogleMapOptions RenderOptions(this MapView view)
         {
             return new GoogleMapOptions().InvokeMapType(GoogleMap.MapTypeNormal)
-                .InvokeZoomControlsEnabled(map.ShowZoomControls)
-                .InvokeZoomGesturesEnabled(map.Zoomable)
-                .InvokeScrollGesturesEnabled(map.Pannable)
-                .InvokeRotateGesturesEnabled(map.Rotatable);
+                .InvokeZoomControlsEnabled(view.Map.ShowZoomControls.Value)
+                .InvokeZoomGesturesEnabled(view.Map.Zoomable.Value)
+                .InvokeScrollGesturesEnabled(view.Map.Pannable.Value)
+                .InvokeRotateGesturesEnabled(view.Map.Rotatable.Value);
         }
 
-        public static GeoLocation ToZebble(this LatLng point) => new GeoLocation(point.Latitude, point.Longitude);
+        public static GeoLocation ToLocation(this LatLng point) => new GeoLocation(point.Latitude, point.Longitude);
     }
 }

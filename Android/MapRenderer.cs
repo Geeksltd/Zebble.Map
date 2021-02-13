@@ -8,11 +8,12 @@ namespace Zebble
     using Android.Gms.Maps.Model;
     using Olive;
     using Olive.GeoLocation;
+    using Zebble.Mvvm;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     class MapRenderer : INativeRenderer
     {
-        Map View;
+        MapView View;
         MapLayout Container; // The map will be drawn onto this after the page is rendered.
         MapFragment Fragment;
         GoogleMap Map;
@@ -20,16 +21,16 @@ namespace Zebble
 
         public async Task<Android.Views.View> Render(Renderer renderer)
         {
-            View = (Map)renderer.View;
-            View.ShowZoomControlsChanged.HandleOn(Thread.UI, () => Map.UiSettings.ZoomControlsEnabled = View.ShowZoomControls);
-            View.ZoomableChanged.HandleOn(Thread.UI, () => Map.UiSettings.ZoomControlsEnabled = View.Zoomable);
-            View.PannableChanged.HandleOn(Thread.UI, () => Map.UiSettings.ScrollGesturesEnabled = View.Pannable);
-            View.PannableChanged.HandleOn(Thread.UI, () => Map.UiSettings.RotateGesturesEnabled = View.Rotatable);
-            View.ZoomLevel.ChangedBySource += () => Thread.UI.Run(() => Map.AnimateCamera(CameraUpdateFactory.ZoomBy(View.ZoomLevel.Value)));
-            View.AddedAnnotation.HandleOn(Thread.UI, a => RenderAnnotation(a));
-            View.RemovedAnnotation.HandleOn(Thread.UI, a => RemoveAnnotation(a));
-            View.ApiCenterChanged.HandleOn(Thread.UI, MoveToRegion);
-            View.MapTypeChanged.HandleOn(Thread.UI, () => Map.MapType = GetMapType());
+            View = (MapView)renderer.View;
+            View.Map.ShowZoomControls.ChangedBySource += () => Thread.UI.Run(() => Map.UiSettings.ZoomControlsEnabled = View.Map.ShowZoomControls.Value);
+            View.Map.Zoomable.ChangedBySource += () => Thread.UI.Run(() => Map.UiSettings.ZoomControlsEnabled = View.Map.Zoomable.Value);
+            View.Map.Pannable.ChangedBySource += () => Thread.UI.Run(() => Map.UiSettings.ScrollGesturesEnabled = View.Map.Pannable.Value);
+            View.Map.Rotatable.ChangedBySource += () => Thread.UI.Run(() => Map.UiSettings.RotateGesturesEnabled = View.Map.Rotatable.Value);
+            View.Map.ZoomLevel.ChangedBySource += () => Thread.UI.Run(() => Map.AnimateCamera(CameraUpdateFactory.ZoomBy(View.Map.ZoomLevel.Value)));
+            View.Map.Annotations.Added += a => Thread.UI.Run(() => RenderAnnotation(a));
+            View.Map.Annotations.Removing += a => Thread.UI.Run(() => RemoveAnnotation(a));
+            View.Map.Center.ChangedBySource += () => Thread.UI.Run(MoveToRegion);
+            View.Map.MapType.ChangedBySource += () => Thread.UI.Run(() => Map.MapType = GetMapType());
             Container = new MapLayout(Renderer.Context) { Id = FindFreeId() };
 
             Thread.UI.Post(async () =>
@@ -49,7 +50,7 @@ namespace Zebble
 
         int GetMapType()
         {
-            switch (View.MapType)
+            switch (View.Map.MapType.Value)
             {
                 case MapTypes.Satelite:
                     return GoogleMap.MapTypeSatellite;
@@ -71,7 +72,7 @@ namespace Zebble
             await CreateMap();
             if (IsDisposing()) return;
 
-            await View.Annotations.AwaitAll(RenderAnnotation);
+            await View.Map.Annotations.AwaitAll(RenderAnnotation);
             if (IsDisposing()) return;
 
             var layoutParams = Fragment.View.LayoutParameters;
@@ -94,7 +95,7 @@ namespace Zebble
 
         void Map_CameraChange(object _, GoogleMap.CameraChangeEventArgs args) => OnUserChangedRegion();
 
-        async Task RenderAnnotation(Map.Annotation annotation)
+        async Task RenderAnnotation(Annotation annotation)
         {
             if (annotation == null) return;
             if (annotation.Location == null)
@@ -134,7 +135,7 @@ namespace Zebble
             }
         }
 
-        void RemoveAnnotation(Map.Annotation annotation) => (annotation?.Native as Marker)?.Remove();
+        void RemoveAnnotation(Annotation annotation) => (annotation?.Native as Marker)?.Remove();
 
         async Task MoveToRegion()
         {
@@ -144,7 +145,7 @@ namespace Zebble
 
             var update = CameraUpdateFactory.NewCameraPosition(
                 CameraPosition.FromLatLngZoom((await View.GetCenter()).Render(),
-                View.ZoomLevel.Value));
+                View.Map.ZoomLevel.Value));
             try
             {
                 Thread.UI.RunAction(() => Map?.AnimateCamera(update));
@@ -166,11 +167,11 @@ namespace Zebble
             var topLeft = projection.FromScreenLocation(new Android.Graphics.Point(0, 0));
             var bottomLeft = projection.FromScreenLocation(new Android.Graphics.Point(0, height));
             var bottomRight = projection.FromScreenLocation(new Android.Graphics.Point(width, height));
-            View.VisibleRegion = new RadialRegion(topLeft.ToZebble(), bottomLeft.ToZebble(), bottomRight.ToZebble());
+            View.Map.VisibleRegion.Set(new RadialRegion(topLeft.ToLocation(), bottomLeft.ToLocation(), bottomRight.ToLocation()));
 
-            var region = RectangularRegion.FromCentre(View.VisibleRegion.Center,
-                View.VisibleRegion.LatitudeDegrees, View.VisibleRegion.LongitudeDegrees);
-            View.UserChangedRegion.RaiseOn(Thread.Pool, region);
+            var region = RectangularRegion.FromCentre(View.Map.VisibleRegion.Value.Center,
+                View.Map.VisibleRegion.Value.LatitudeDegrees, View.Map.VisibleRegion.Value.LongitudeDegrees);
+            View.Map.CenterOfVisibleRegion.Set(region);
         }
 
         async Task CreateMap()
@@ -178,10 +179,10 @@ namespace Zebble
             var source = new TaskCompletionSource<GoogleMap>();
             Fragment?.GetMapAsync(new MapReadyCallBack(source.SetResult));
             Map = await source.Task;
-            Map.UiSettings.ZoomControlsEnabled = View.ShowZoomControls;
-            Map.UiSettings.ZoomGesturesEnabled = View.Zoomable;
-            Map.UiSettings.ScrollGesturesEnabled = View.Pannable;
-            Map.UiSettings.RotateGesturesEnabled = View.Rotatable;
+            Map.UiSettings.ZoomControlsEnabled = View.Map.ShowZoomControls.Value;
+            Map.UiSettings.ZoomGesturesEnabled = View.Map.Zoomable.Value;
+            Map.UiSettings.ScrollGesturesEnabled = View.Map.Pannable.Value;
+            Map.UiSettings.RotateGesturesEnabled = View.Map.Rotatable.Value;
             Map.CameraChange += Map_CameraChange;
             Map.InfoWindowClick += Map_InfoWindowClick;
             Map.MapClick += Map_MapClick;
@@ -201,19 +202,19 @@ namespace Zebble
 
         async Task ApplyZoom()
         {
-            var center = View.Center ?? await View.GetCenter();
+            var center = View.Map.Center.Value ?? await View.GetCenter();
 
-            if (View.ZoomLevel.Value != default)
+            if (View.Map.ZoomLevel.Value != default)
             {
-                Map.AnimateCamera(CameraUpdateFactory.NewLatLngZoom(center.Render(), View.ZoomLevel.Value));
+                Map.AnimateCamera(CameraUpdateFactory.NewLatLngZoom(center.Render(), View.Map.ZoomLevel.Value));
             }
-            else if (View.Annotations.Any())
+            else if (View.Map.Annotations.Any())
             {
                 using (var builder = new LatLngBounds.Builder())
                 {
                     builder.Include(new LatLng(center.Latitude, center.Longitude));
 
-                    foreach (var annotation in View.Annotations)
+                    foreach (var annotation in View.Map.Annotations)
                     {
                         builder.Include(new LatLng(annotation.Location.Latitude, annotation.Location.Longitude));
                     }
@@ -232,7 +233,7 @@ namespace Zebble
             }
             else
             {
-                Map.AnimateCamera(CameraUpdateFactory.NewLatLngZoom(center.Render(), Zebble.Map.DefaultZoomLevel));
+                Map.AnimateCamera(CameraUpdateFactory.NewLatLngZoom(center.Render(), Zebble.Mvvm.Map.DefaultZoomLevel));
             }
         }
 

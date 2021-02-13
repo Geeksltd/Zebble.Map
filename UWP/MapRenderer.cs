@@ -11,16 +11,17 @@
     using Windows.UI.Xaml.Controls.Maps;
     using Olive;
     using Olive.GeoLocation;
+    using Zebble.Mvvm;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     class MapRenderer : INativeRenderer
     {
-        Map View;
+        MapView View;
         MapControl Result;
 
         public async Task<FrameworkElement> Render(Renderer renderer)
         {
-            View = (Map)renderer.View;
+            View = (MapView)renderer.View;
             Result = new MapControl
             {
                 VerticalAlignment = Windows.UI.Xaml.VerticalAlignment.Stretch,
@@ -46,7 +47,7 @@
             Thread.UI.Post(async () =>
             {
                 await ApplyZoom();
-                foreach (var a in View.Annotations) await RenderAnnotation(a);
+                foreach (var a in View.Map.Annotations) await RenderAnnotation(a);
             });
 
             return Result;
@@ -69,7 +70,7 @@
             var markers = ev.MapElements.OfType<MapIcon>().ToList();
 
             foreach (var marker in markers)
-                View.Annotations.FirstOrDefault(a => a.Native == marker)?.RaiseTapped();
+                View.Map.Annotations.FirstOrDefault(a => a.Native == marker)?.RaiseTapped();
         }
 
         void UpdatedVisibleRegion()
@@ -85,11 +86,11 @@
             Result.GetLocationFromOffset(new Windows.Foundation.Point(Result.ActualWidth, Result.ActualHeight), out var bottomRight);
             if (bottomRight == null) return;
 
-            View.VisibleRegion = new RadialRegion(GetGeoLocation(topLeft), GetGeoLocation(bottomLeft), GetGeoLocation(bottomRight));
+            View.Map.VisibleRegion.Set(new RadialRegion(GetGeoLocation(topLeft), GetGeoLocation(bottomLeft), GetGeoLocation(bottomRight)));
 
-            var region = RectangularRegion.FromCentre(View.VisibleRegion.Center,
-                View.VisibleRegion.LatitudeDegrees, View.VisibleRegion.LongitudeDegrees);
-            View.UserChangedRegion.RaiseOn(Thread.Pool, region);
+            var region = RectangularRegion.FromCentre(View.Map.VisibleRegion.Value.Center,
+                View.Map.VisibleRegion.Value.LatitudeDegrees, View.Map.VisibleRegion.Value.LongitudeDegrees);
+            View.Map.CenterOfVisibleRegion.Set(region);
         }
 
         GeoLocation GetGeoLocation(Geopoint point) => new GeoLocation(point.Position.Latitude, point.Position.Longitude);
@@ -103,20 +104,20 @@
 
         void HandleEvents()
         {
-            View.ZoomLevel.ChangedBySource += () => Thread.UI.Run(Calculate);
-            View.ZoomableChanged.HandleOn(Thread.UI, () => ZoomEnabledChanged());
-            View.PannableChanged.HandleOn(Thread.UI, () => ScrollEnabledChanged());
-            View.RotatableChanged.HandleOn(Thread.UI, () => RotatableChanged());
-            View.AddedAnnotation.HandleOn(Thread.UI, RenderAnnotation);
-            View.RemovedAnnotation.HandleOn(Thread.UI, a => RemoveAnnotation(a));
-            View.ApiCenterChanged.HandleOn(Thread.UI, ApplyZoom);
-            View.MapTypeChanged.HandleOn(Thread.UI, () => Result.Style = GetMapType());
+            View.Map.ZoomLevel.ChangedBySource += () => Thread.UI.Run(Calculate);
+            View.Map.Zoomable.ChangedBySource += () => Thread.UI.Run(ZoomEnabledChanged);
+            View.Map.Pannable.ChangedBySource += () => Thread.UI.Run(ScrollEnabledChanged);
+            View.Map.Rotatable.ChangedBySource += () => Thread.UI.Run(RotatableChanged);
+            View.Map.Annotations.Added += a => Thread.UI.Run(() => RenderAnnotation(a));
+            View.Map.Annotations.Removing += a => Thread.UI.Run(() => RemoveAnnotation(a));
+            View.Map.Center.ChangedBySource += () => Thread.UI.Run(ApplyZoom);
+            View.Map.MapType.ChangedBySource += () => Thread.UI.Run(() => Result.Style = GetMapType());
             Result.MapTapped += Result_MapTapped;
         }
 
         MapStyle GetMapType()
         {
-            switch (View.MapType)
+            switch (View.Map.MapType.Value)
             {
                 case MapTypes.Satelite:
                     return MapStyle.Aerial;
@@ -136,9 +137,9 @@
         {
             if (Result == null) return;
 
-            if (View.Zoomable && View.ShowZoomControls) Result.ZoomInteractionMode = MapInteractionMode.GestureAndControl;
-            else if (View.Zoomable) Result.ZoomInteractionMode = MapInteractionMode.GestureOnly;
-            else if (View.ShowZoomControls) Result.ZoomInteractionMode = MapInteractionMode.ControlOnly;
+            if (View.Map.Zoomable.Value && View.Map.ShowZoomControls.Value) Result.ZoomInteractionMode = MapInteractionMode.GestureAndControl;
+            else if (View.Map.Zoomable.Value) Result.ZoomInteractionMode = MapInteractionMode.GestureOnly;
+            else if (View.Map.ShowZoomControls.Value) Result.ZoomInteractionMode = MapInteractionMode.ControlOnly;
             else Result.ZoomInteractionMode = MapInteractionMode.Disabled;
         }
 
@@ -146,7 +147,7 @@
         {
             if (Result == null) return;
 
-            if (View.Pannable) Result.PanInteractionMode = MapPanInteractionMode.Auto;
+            if (View.Map.Pannable) Result.PanInteractionMode = MapPanInteractionMode.Auto;
             else Result.PanInteractionMode = MapPanInteractionMode.Disabled;
         }
 
@@ -154,11 +155,11 @@
         {
             if (Result == null) return;
 
-            if (View.Rotatable) Result.RotateInteractionMode = MapInteractionMode.GestureAndControl;
+            if (View.Map.Rotatable) Result.RotateInteractionMode = MapInteractionMode.GestureAndControl;
             else Result.RotateInteractionMode = MapInteractionMode.Disabled;
         }
 
-        async Task RenderAnnotation(Map.Annotation annotation)
+        async Task RenderAnnotation(Annotation annotation)
         {
             if (annotation == null || Result == null) return;
             if (annotation.Location == null)
@@ -189,7 +190,7 @@
             Result.MapElements.Add(poi);
         }
 
-        void RemoveAnnotation(Map.Annotation annotation)
+        void RemoveAnnotation(Annotation annotation)
         {
             if (Result == null || annotation == null) return;
 
@@ -206,12 +207,12 @@
 
             var center = (await View.GetCenter()).Render();
 
-            if (View.ZoomLevel.Value != default)
+            if (View.Map.ZoomLevel.Value != default)
             {
-                await Result.TrySetViewAsync(center, View.ZoomLevel.Value).AsTask()
+                await Result.TrySetViewAsync(center, View.Map.ZoomLevel.Value).AsTask()
                     .WithTimeout(1.Seconds(), timeoutAction: () => Log.For(this).Warning("Map.TrySetViewAsync() timed out."));
             }
-            else if (View.Annotations.Any())
+            else if (View.Map.Annotations.Any())
             {
                 var points = new List<Geopoint>
                 {
@@ -222,7 +223,7 @@
                     })
                 };
 
-                foreach (var annotation in View.Annotations)
+                foreach (var annotation in View.Map.Annotations)
                 {
                     points.Add(new Geopoint(new BasicGeoposition
                     {
