@@ -1,5 +1,7 @@
 namespace Zebble
 {
+    using Olive.GeoLocation;
+
     partial class Map
     {
         public partial class Annotation
@@ -10,6 +12,8 @@ namespace Zebble
             /// This is ignored in UWP.
             /// </summary>
             public string Subtitle { get; set; } = string.Empty;
+
+            public GeoLocation Location { get; set; } = new GeoLocation();
 
             /// <summary>
             /// Path to the pin icon (optional).

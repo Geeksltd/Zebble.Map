@@ -166,9 +166,9 @@ namespace Zebble
             var topLeft = projection.FromScreenLocation(new Android.Graphics.Point(0, 0));
             var bottomLeft = projection.FromScreenLocation(new Android.Graphics.Point(0, height));
             var bottomRight = projection.FromScreenLocation(new Android.Graphics.Point(width, height));
-            View.VisibleRegion = new Map.Span(topLeft.ToZebble(), bottomLeft.ToZebble(), bottomRight.ToZebble());
+            View.VisibleRegion = new RadialRegion(topLeft.ToZebble(), bottomLeft.ToZebble(), bottomRight.ToZebble());
 
-            var region = GeoRegion.FromCentre(View.VisibleRegion.Center,
+            var region = RectangularRegion.FromCentre(View.VisibleRegion.Center,
                 View.VisibleRegion.LatitudeDegrees, View.VisibleRegion.LongitudeDegrees);
             View.UserChangedRegion.RaiseOn(Thread.Pool, region);
         }

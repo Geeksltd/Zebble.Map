@@ -85,9 +85,9 @@
             Result.GetLocationFromOffset(new Windows.Foundation.Point(Result.ActualWidth, Result.ActualHeight), out var bottomRight);
             if (bottomRight == null) return;
 
-            View.VisibleRegion = new Map.Span(GetGeoLocation(topLeft), GetGeoLocation(bottomLeft), GetGeoLocation(bottomRight));
+            View.VisibleRegion = new RadialRegion(GetGeoLocation(topLeft), GetGeoLocation(bottomLeft), GetGeoLocation(bottomRight));
 
-            var region = GeoRegion.FromCentre(View.VisibleRegion.Center,
+            var region = RectangularRegion.FromCentre(View.VisibleRegion.Center,
                 View.VisibleRegion.LatitudeDegrees, View.VisibleRegion.LongitudeDegrees);
             View.UserChangedRegion.RaiseOn(Thread.Pool, region);
         }

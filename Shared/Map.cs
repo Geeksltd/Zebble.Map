@@ -34,7 +34,7 @@ namespace Zebble
         internal readonly AsyncEvent<Annotation> RemovedAnnotation = new AsyncEvent<Annotation>(ConcurrentEventRaisePolicy.Queue);
         internal readonly AsyncEvent ApiCenterChanged = new AsyncEvent(ConcurrentEventRaisePolicy.Queue);
         internal readonly AsyncEvent MapTypeChanged = new AsyncEvent(ConcurrentEventRaisePolicy.Queue);
-        public readonly AsyncEvent<GeoRegion> UserChangedRegion = new AsyncEvent<GeoRegion>(ConcurrentEventRaisePolicy.Queue);
+        public readonly AsyncEvent<RectangularRegion> UserChangedRegion = new AsyncEvent<RectangularRegion>(ConcurrentEventRaisePolicy.Queue);
         MapTypes mapType;
 
         public MapTypes MapType
@@ -115,7 +115,7 @@ namespace Zebble
             }
         }
 
-        public Span VisibleRegion { get; internal set; }
+        public RadialRegion VisibleRegion { get; internal set; }
 
         internal async Task<GeoLocation> GetCenter()
         {

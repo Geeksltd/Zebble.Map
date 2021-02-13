@@ -53,11 +53,11 @@ namespace Zebble
         {
             var centre = new GeoLocation(Result.Region.Center.Latitude, Result.Region.Center.Longitude);
 
-            var region = GeoRegion.FromCentre(centre, Result.Region.Span.LatitudeDelta, Result.Region.Span.LongitudeDelta);
+            var region = RectangularRegion.FromCentre(centre, Result.Region.Span.LatitudeDelta, Result.Region.Span.LongitudeDelta);
             var topLeft = Result.ConvertPoint(new CoreGraphics.CGPoint(x: 0, y: 0), toCoordinateFromView: Result);
             var bottomLeft = Result.ConvertPoint(new CoreGraphics.CGPoint(x: 0, y: Result.Bounds.Height), toCoordinateFromView: Result);
             var bottomRight = Result.ConvertPoint(new CoreGraphics.CGPoint(x: Result.Bounds.Width, y: Result.Bounds.Height), toCoordinateFromView: Result);
-            View.VisibleRegion = new Map.Span(GetGeoLocation(topLeft), GetGeoLocation(bottomLeft), GetGeoLocation(bottomRight));
+            View.VisibleRegion = new RadialRegion(GetGeoLocation(topLeft), GetGeoLocation(bottomLeft), GetGeoLocation(bottomRight));
             View.UserChangedRegion.RaiseOn(Thread.Pool, region);
         }
 

@@ -3,7 +3,6 @@ namespace Zebble
     using System;
     using System.Threading.Tasks;
     using Zebble.Services;
-    using Olive.GeoLocation;
 
     partial class Map
     {
@@ -14,8 +13,6 @@ namespace Zebble
             public readonly AsyncEvent Tapped = new AsyncEvent(ConcurrentEventRaisePolicy.Ignore);
 
             internal void RaiseTapped() => Tapped.RaiseOn(Thread.Pool);
-
-            public GeoLocation Location { get; set; } = new GeoLocation();
 
             public object Native { get; internal set; }
 
