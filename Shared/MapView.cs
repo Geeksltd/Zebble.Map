@@ -18,7 +18,10 @@ namespace Zebble
 
         public Map Map { get; }
 
-        public MapView(Map map) => Map = map ?? throw new ArgumentNullException(nameof(map));
+        public MapView()
+        {
+            Map = new Map();
+        }
 
         internal async Task<GeoLocation> GetCenter()
         {
