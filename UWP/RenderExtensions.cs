@@ -18,5 +18,10 @@
         {
             return new Geopoint(location.Position());
         }
+
+        public static GeoLocation ToLocation(this Geopoint point)
+        {
+            return new(point.Position.Latitude, point.Position.Longitude);
+        }
     }
 }

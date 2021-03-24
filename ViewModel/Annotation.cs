@@ -12,7 +12,7 @@ namespace Zebble
         /// </summary>
         public string Subtitle { get; set; } = string.Empty;
 
-        public GeoLocation Location { get; set; } = new GeoLocation();
+        public GeoLocation Location { get; set; } = new();
 
         /// <summary>
         /// Path to the pin icon (optional).

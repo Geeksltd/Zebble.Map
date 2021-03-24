@@ -134,7 +134,7 @@
 
         void Result_MapTapped(MapControl sender, MapInputEventArgs args)
         {
-            View.MapTapped.RaiseOn(Thread.UI, new GeoLocation(args.Location.Position.Latitude, args.Location.Position.Longitude));
+            View.MapTapped.RaiseOn(Thread.UI, args.Location.ToLocation());
         }
 
         void ZoomEnabledChanged()

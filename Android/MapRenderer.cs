@@ -219,12 +219,12 @@ namespace Zebble
 
         void Map_MapLongClick(object sender, GoogleMap.MapLongClickEventArgs e)
         {
-            View.MapLongPressed.RaiseOn(Thread.UI, new GeoLocation(e.Point.Latitude, e.Point.Longitude));
+            View.MapLongPressed.RaiseOn(Thread.UI, e.Point.ToLocation());
         }
 
         void Map_MapClick(object sender, GoogleMap.MapClickEventArgs e)
         {
-            View.MapTapped.RaiseOn(Thread.UI, new GeoLocation(e.Point.Latitude, e.Point.Longitude));
+            View.MapTapped.RaiseOn(Thread.UI, e.Point.ToLocation());
         }
 
         async Task ApplyZoom()

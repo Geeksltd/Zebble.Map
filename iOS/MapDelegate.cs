@@ -3,14 +3,33 @@
     using Foundation;
     using MapKit;
     using ObjCRuntime;
+    using Olive.GeoLocation;
     using System;
     using UIKit;
+    using Zebble.Mvvm;
 
     class MapDelegate : MKMapViewDelegate
     {
+        Map Map;
+
+        public MapDelegate(Map map) => Map = map ?? throw new ArgumentNullException(nameof(map));
+
+        public override void RegionChanged(MKMapView mapView, bool animated)
+        {
+            var center = mapView.Region.Center.ToLocation();
+
+            var region = RectangularRegion.FromCentre(center, mapView.Region.Span.LatitudeDelta, mapView.Region.Span.LongitudeDelta);
+            var topLeft = mapView.ConvertPoint(new CoreGraphics.CGPoint(x: 0, y: 0), toCoordinateFromView: mapView);
+            var bottomLeft = mapView.ConvertPoint(new CoreGraphics.CGPoint(x: 0, y: mapView.Bounds.Height), toCoordinateFromView: mapView);
+            var bottomRight = mapView.ConvertPoint(new CoreGraphics.CGPoint(x: mapView.Bounds.Width, y: mapView.Bounds.Height), toCoordinateFromView: mapView);
+
+            Map.VisibleRegion.Set(new RadialRegion(topLeft.ToLocation(), bottomLeft.ToLocation(), bottomRight.ToLocation()));
+            Map.CenterOfVisibleRegion.Set(region);
+        }
+
         public override MKOverlayRenderer OverlayRenderer(MKMapView mapView, IMKOverlay overlay)
         {
-            if (overlay is not MKPolyline polyline) return base.OverlayRenderer(mapView, overlay);
+            if (overlay is not MKPolyline polyline) return default;
 
             var route = (overlay as BasicMapPolyline).Route;
 

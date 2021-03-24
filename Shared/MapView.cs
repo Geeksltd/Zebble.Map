@@ -25,11 +25,11 @@ namespace Zebble
             if (center != null && (center.Longitude != 0 || center.Latitude != 0)) return center;
 
             var locations = Map.Annotations.Select(a => a.Location).Concat(Map.Routes.SelectMany(r => r.Points));
-
             if (locations.Any())
             {
                 var lat = (locations.Min(a => a.Latitude) + locations.Max(a => a.Latitude)) / 2;
                 var lng = (locations.Min(a => a.Longitude) + locations.Max(a => a.Longitude)) / 2;
+
                 return new GeoLocation(lat, lng);
             }
 

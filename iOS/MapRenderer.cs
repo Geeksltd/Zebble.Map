@@ -1,7 +1,6 @@
 namespace Zebble
 {
     using System;
-    using System.Collections.Generic;
     using System.ComponentModel;
     using System.Linq;
     using System.Threading.Tasks;
@@ -11,7 +10,6 @@ namespace Zebble
     using Olive;
     using Olive.GeoLocation;
     using Zebble.Mvvm;
-    using Foundation;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     class MapRenderer : INativeRenderer
@@ -29,7 +27,7 @@ namespace Zebble
                 RotateEnabled = View.Map.Rotatable.Value,
                 ZoomEnabled = CanZoom(),
                 MapType = GetMapType(),
-                Delegate = new MapDelegate()
+                Delegate = new MapDelegate(View.Map)
             };
 
             ApplyZoom();
@@ -46,20 +44,6 @@ namespace Zebble
             return Result;
         }
 
-        GeoLocation GetGeoLocation(CLLocationCoordinate2D point) => new(point.Latitude, point.Longitude);
-
-        void IosMap_RegionChanged(object sender, MKMapViewChangeEventArgs e)
-        {
-            var centre = new GeoLocation(Result.Region.Center.Latitude, Result.Region.Center.Longitude);
-
-            var region = RectangularRegion.FromCentre(centre, Result.Region.Span.LatitudeDelta, Result.Region.Span.LongitudeDelta);
-            var topLeft = Result.ConvertPoint(new CoreGraphics.CGPoint(x: 0, y: 0), toCoordinateFromView: Result);
-            var bottomLeft = Result.ConvertPoint(new CoreGraphics.CGPoint(x: 0, y: Result.Bounds.Height), toCoordinateFromView: Result);
-            var bottomRight = Result.ConvertPoint(new CoreGraphics.CGPoint(x: Result.Bounds.Width, y: Result.Bounds.Height), toCoordinateFromView: Result);
-            View.Map.VisibleRegion.Set(new RadialRegion(GetGeoLocation(topLeft), GetGeoLocation(bottomLeft), GetGeoLocation(bottomRight)));
-            View.Map.CenterOfVisibleRegion.Set(region);
-        }
-
         void HandleEvents()
         {
             View.Map.Zoomable.ChangedBySource += () => Thread.UI.Run(() => Result.ZoomEnabled = CanZoom());
@@ -72,13 +56,13 @@ namespace Zebble
             View.Map.Routes.Removing += r => Thread.UI.Run(() => RemoveRoute(r));
             View.Map.Center.ChangedBySource += () => Thread.UI.Run(async () => Result.CenterCoordinate = await GetCenter());
             View.Map.MapType.ChangedBySource += () => Thread.UI.Run(() => Result.MapType = GetMapType());
-            Result.RegionChanged += IosMap_RegionChanged;
+
             Result.AddGestureRecognizer(new UITapGestureRecognizer(action: (uiTapGestureRecognizer) =>
             {
                 var location = uiTapGestureRecognizer.LocationInView(Result);
                 var coordinate = Result.ConvertPoint(location, Result);
 
-                View.MapTapped.RaiseOn(Thread.UI, new GeoLocation(coordinate.Latitude, coordinate.Longitude));
+                View.MapTapped.RaiseOn(Thread.UI, coordinate.ToLocation());
             }));
         }
 
@@ -166,7 +150,7 @@ namespace Zebble
             }
             else
             {
-                Result.CenterCoordinate = await GetCenter();
+                Result.CenterCoordinate = center;
 
                 var mapRegion = new MKCoordinateRegion(Result.CenterCoordinate, Result.GetSpan(Map.DefaultZoomLevel));
                 Result.SetRegion(mapRegion, animated: true);
