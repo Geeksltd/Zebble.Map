@@ -8,7 +8,7 @@ namespace Zebble
     {
         ImageService.ImageSource IconProvider;
 
-        public readonly AsyncEvent Tapped = new AsyncEvent(ConcurrentEventRaisePolicy.Ignore);
+        public readonly AsyncEvent Tapped = new(ConcurrentEventRaisePolicy.Ignore);
 
         internal void RaiseTapped() => Tapped.RaiseOn(Thread.Pool);
 

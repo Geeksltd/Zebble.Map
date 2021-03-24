@@ -3,18 +3,28 @@
     using Foundation;
     using MapKit;
     using ObjCRuntime;
+    using System;
     using UIKit;
 
     class MapDelegate : MKMapViewDelegate
     {
-        MapView View;
+        public override MKOverlayRenderer OverlayRenderer(MKMapView mapView, IMKOverlay overlay)
+        {
+            if (overlay is not MKPolyline polyline) return base.OverlayRenderer(mapView, overlay);
 
-        internal MapDelegate(MapView view) => View = view;
+            var route = (overlay as BasicMapPolyline).Route;
+
+            return new MKPolylineRenderer(polyline)
+            {
+                StrokeColor = route.Color.Render(),
+                LineWidth = route.Thickness
+            };
+        }
 
         public override MKAnnotationView GetViewForAnnotation(MKMapView mapView, IMKAnnotation annotation)
         {
             if (Runtime.GetNSObject(annotation.Handle) is MKUserLocation userLocationAnnotation)
-                return default(MKAnnotationView);
+                return default;
 
             var pin = new MKAnnotationView(annotation, "defaultPin")
             {
@@ -54,14 +64,6 @@
         {
             var annotation = (nativeAnnotation as BasicMapAnnotation)?.View;
             annotation?.RaiseTapped();
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-                View = null;
-
-            base.Dispose(disposing);
         }
     }
 }

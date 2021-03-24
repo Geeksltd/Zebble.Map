@@ -8,7 +8,6 @@ namespace Zebble
     using Android.Gms.Maps.Model;
     using Olive;
     using Olive.GeoLocation;
-    using Zebble.Mvvm;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     class MapRenderer : INativeRenderer
@@ -22,6 +21,7 @@ namespace Zebble
         public async Task<Android.Views.View> Render(Renderer renderer)
         {
             View = (MapView)renderer.View;
+
             View.Map.ShowZoomControls.ChangedBySource += () => Thread.UI.Run(() => Map.UiSettings.ZoomControlsEnabled = View.Map.ShowZoomControls.Value);
             View.Map.Zoomable.ChangedBySource += () => Thread.UI.Run(() => Map.UiSettings.ZoomControlsEnabled = View.Map.Zoomable.Value);
             View.Map.Pannable.ChangedBySource += () => Thread.UI.Run(() => Map.UiSettings.ScrollGesturesEnabled = View.Map.Pannable.Value);
@@ -29,14 +29,14 @@ namespace Zebble
             View.Map.ZoomLevel.ChangedBySource += () => Thread.UI.Run(() => Map.AnimateCamera(CameraUpdateFactory.ZoomBy(View.Map.ZoomLevel.Value)));
             View.Map.Annotations.Added += a => Thread.UI.Run(() => RenderAnnotation(a));
             View.Map.Annotations.Removing += a => Thread.UI.Run(() => RemoveAnnotation(a));
+            View.Map.Routes.Added += r => Thread.UI.Run(() => RenderRoute(r));
+            View.Map.Routes.Removing += r => Thread.UI.Run(() => RemoveRoute(r));
             View.Map.Center.ChangedBySource += () => Thread.UI.Run(MoveToRegion);
             View.Map.MapType.ChangedBySource += () => Thread.UI.Run(() => Map.MapType = GetMapType());
+
             Container = new MapLayout(Renderer.Context) { Id = FindFreeId() };
 
-            Thread.UI.Post(async () =>
-            {
-                await LoadMap();
-            });
+            Thread.UI.Post(async () => await LoadMap());
 
             return Container;
         }
@@ -50,15 +50,12 @@ namespace Zebble
 
         int GetMapType()
         {
-            switch (View.Map.MapType.Value)
+            return View.Map.MapType.Value switch
             {
-                case MapTypes.Satelite:
-                    return GoogleMap.MapTypeSatellite;
-                case MapTypes.Hybrid:
-                    return GoogleMap.MapTypeHybrid;
-                default:
-                    return GoogleMap.MapTypeNormal;
-            }
+                MapTypes.Satelite => GoogleMap.MapTypeSatellite,
+                MapTypes.Hybrid => GoogleMap.MapTypeHybrid,
+                _ => GoogleMap.MapTypeNormal,
+            };
         }
 
         async Task LoadMap()
@@ -73,9 +70,8 @@ namespace Zebble
             if (IsDisposing()) return;
 
             await View.Map.Annotations.AwaitAll(RenderAnnotation);
+            await View.Map.Routes.AwaitAll(RenderRoute);
             if (IsDisposing()) return;
-
-            var layoutParams = Fragment.View.LayoutParameters;
 
             Map.MapType = GetMapType();
 
@@ -90,6 +86,7 @@ namespace Zebble
             transaction.Add(view.Id, fragment);
             transaction.Commit();
             UIRuntime.CurrentActivity.FragmentManager.ExecutePendingTransactions();
+
             return fragment;
         }
 
@@ -111,8 +108,6 @@ namespace Zebble
             markerOptions.SetTitle(annotation.Title.OrEmpty());
             markerOptions.SetSnippet(annotation.Subtitle.OrEmpty());
 
-            if (annotation.Flat) markerOptions.Flat(annotation.Flat);
-
             if (annotation.IconPath.HasValue())
             {
                 var provider = await annotation.GetPinImageProvider();
@@ -125,6 +120,32 @@ namespace Zebble
             annotation.Native = marker;
         }
 
+        void RemoveAnnotation(Annotation annotation) => (annotation?.Native as Marker)?.Remove();
+
+        async Task RenderRoute(Route route)
+        {
+            if (route == null) return;
+            if (route.Points.Length < 2)
+            {
+                Log.For(this).Warning("The route must contain at least two points!");
+                return;
+            }
+
+            await AwaitMapCreation();
+
+            var options = new PolylineOptions();
+
+            options.InvokeColor(route.Color.Render());
+            options.InvokeWidth(route.Thickness);
+
+            foreach (var point in route.Points)
+                options.Add(point.Render());
+
+            route.Native = Map.AddPolyline(options);
+        }
+
+        void RemoveRoute(Route route) => (route?.Native as Polyline)?.Remove();
+
         async Task AwaitMapCreation()
         {
             for (var retry = 10; retry > 0; retry--)
@@ -135,8 +156,6 @@ namespace Zebble
             }
         }
 
-        void RemoveAnnotation(Annotation annotation) => (annotation?.Native as Marker)?.Remove();
-
         async Task MoveToRegion()
         {
             if (IsDisposing()) return;
@@ -146,6 +165,7 @@ namespace Zebble
             var update = CameraUpdateFactory.NewCameraPosition(
                 CameraPosition.FromLatLngZoom((await View.GetCenter()).Render(),
                 View.Map.ZoomLevel.Value));
+
             try
             {
                 Thread.UI.RunAction(() => Map?.AnimateCamera(update));
@@ -162,22 +182,28 @@ namespace Zebble
 
             var projection = Map?.Projection;
             if (projection == null) return;
+
             var width = Fragment.View.Width;
             var height = Fragment.View.Height;
             var topLeft = projection.FromScreenLocation(new Android.Graphics.Point(0, 0));
             var bottomLeft = projection.FromScreenLocation(new Android.Graphics.Point(0, height));
             var bottomRight = projection.FromScreenLocation(new Android.Graphics.Point(width, height));
+
             View.Map.VisibleRegion.Set(new RadialRegion(topLeft.ToLocation(), bottomLeft.ToLocation(), bottomRight.ToLocation()));
 
-            var region = RectangularRegion.FromCentre(View.Map.VisibleRegion.Value.Center,
-                View.Map.VisibleRegion.Value.LatitudeDegrees, View.Map.VisibleRegion.Value.LongitudeDegrees);
+            var region = RectangularRegion.FromCentre(
+                View.Map.VisibleRegion.Value.Center,
+                View.Map.VisibleRegion.Value.LatitudeDegrees,
+                View.Map.VisibleRegion.Value.LongitudeDegrees
+            );
             View.Map.CenterOfVisibleRegion.Set(region);
         }
 
         async Task CreateMap()
         {
             var source = new TaskCompletionSource<GoogleMap>();
-            Fragment?.GetMapAsync(new MapReadyCallBack(source.SetResult));
+            Fragment?.GetMapAsync(new MapReadyCallback(source.SetResult));
+
             Map = await source.Task;
             Map.UiSettings.ZoomControlsEnabled = View.Map.ShowZoomControls.Value;
             Map.UiSettings.ZoomGesturesEnabled = View.Map.Zoomable.Value;
@@ -187,6 +213,7 @@ namespace Zebble
             Map.InfoWindowClick += Map_InfoWindowClick;
             Map.MapClick += Map_MapClick;
             Map.MapLongClick += Map_MapLongClick;
+
             await ApplyZoom();
         }
 
@@ -207,17 +234,19 @@ namespace Zebble
             if (View.Map.ZoomLevel.Value != default)
             {
                 Map.AnimateCamera(CameraUpdateFactory.NewLatLngZoom(center.Render(), View.Map.ZoomLevel.Value));
+                return;
             }
-            else if (View.Map.Annotations.Any())
+
+
+
+            if (View.Map.Annotations.Any() || View.Map.Routes.Any())
             {
                 using (var builder = new LatLngBounds.Builder())
                 {
-                    builder.Include(new LatLng(center.Latitude, center.Longitude));
+                    builder.Include(center.Render());
 
-                    foreach (var annotation in View.Map.Annotations)
-                    {
-                        builder.Include(new LatLng(annotation.Location.Latitude, annotation.Location.Longitude));
-                    }
+                    foreach (var location in View.Map.Annotations.Select(a => a.Location).Concat(View.Map.Routes.SelectMany(r => r.Points)))
+                        builder.Include(location.Render());
 
                     var bounds = builder.Build();
 

@@ -11,14 +11,13 @@ namespace Zebble
     using Olive;
     using Olive.GeoLocation;
     using Zebble.Mvvm;
+    using Foundation;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     class MapRenderer : INativeRenderer
     {
         MapView View;
         MKMapView Result;
-
-        List<object> ActionList = new List<object>();
 
         public async Task<UIView> Render(Renderer renderer)
         {
@@ -29,7 +28,8 @@ namespace Zebble
                 ScrollEnabled = View.Map.Pannable.Value,
                 RotateEnabled = View.Map.Rotatable.Value,
                 ZoomEnabled = CanZoom(),
-                MapType = GetMapType()
+                MapType = GetMapType(),
+                Delegate = new MapDelegate()
             };
 
             ApplyZoom();
@@ -39,16 +39,14 @@ namespace Zebble
             {
                 Result.CenterCoordinate = await GetCenter();
 
-                // Load annotations:
-                using (var mapDelegate = new MapDelegate(View))
-                    Result.GetViewForAnnotation = mapDelegate.GetViewForAnnotation;
                 await View.Map.Annotations.AwaitAll(RenderAnnotation);
+                await View.Map.Routes.AwaitAll(RenderRoute);
             });
 
             return Result;
         }
 
-        GeoLocation GetGeoLocation(CLLocationCoordinate2D point) => new GeoLocation(point.Latitude, point.Longitude);
+        GeoLocation GetGeoLocation(CLLocationCoordinate2D point) => new(point.Latitude, point.Longitude);
 
         void IosMap_RegionChanged(object sender, MKMapViewChangeEventArgs e)
         {
@@ -70,6 +68,8 @@ namespace Zebble
             View.Map.Rotatable.ChangedBySource += () => Thread.UI.Run(() => Result.RotateEnabled = View.Map.Rotatable.Value);
             View.Map.Annotations.Added += a => Thread.UI.Run(() => RenderAnnotation(a));
             View.Map.Annotations.Removing += a => Thread.UI.Run(() => RemoveAnnotation(a));
+            View.Map.Routes.Added += r => Thread.UI.Run(() => RenderRoute(r));
+            View.Map.Routes.Removing += r => Thread.UI.Run(() => RemoveRoute(r));
             View.Map.Center.ChangedBySource += () => Thread.UI.Run(async () => Result.CenterCoordinate = await GetCenter());
             View.Map.MapType.ChangedBySource += () => Thread.UI.Run(() => Result.MapType = GetMapType());
             Result.RegionChanged += IosMap_RegionChanged;
@@ -115,7 +115,7 @@ namespace Zebble
                 var mapRegion = new MKCoordinateRegion(Result.CenterCoordinate, Result.GetSpan(View.Map.ZoomLevel.Value));
                 Result.SetRegion(mapRegion, animated: true);
             }
-            else if (View.Map.Annotations.Any())
+            else if (View.Map.Routes.Any() || View.Map.Routes.Any())
             {
                 CLLocationCoordinate2D topLeftCoord;
                 topLeftCoord.Latitude = -90;
@@ -131,13 +131,13 @@ namespace Zebble
                 bottomRightCoord.Longitude = Math.Max(bottomRightCoord.Longitude, center.Longitude);
                 bottomRightCoord.Latitude = Math.Min(bottomRightCoord.Latitude, center.Latitude);
 
-                foreach (var annotation in View.Map.Annotations)
+                foreach (var location in View.Map.Annotations.Select(a => a.Location).Concat(View.Map.Routes.SelectMany(r => r.Points)))
                 {
-                    topLeftCoord.Longitude = Math.Min(topLeftCoord.Longitude, annotation.Location.Longitude);
-                    topLeftCoord.Latitude = Math.Max(topLeftCoord.Latitude, annotation.Location.Latitude);
+                    topLeftCoord.Longitude = Math.Min(topLeftCoord.Longitude, location.Longitude);
+                    topLeftCoord.Latitude = Math.Max(topLeftCoord.Latitude, location.Latitude);
 
-                    bottomRightCoord.Longitude = Math.Max(bottomRightCoord.Longitude, annotation.Location.Longitude);
-                    bottomRightCoord.Latitude = Math.Min(bottomRightCoord.Latitude, annotation.Location.Latitude);
+                    bottomRightCoord.Longitude = Math.Max(bottomRightCoord.Longitude, location.Longitude);
+                    bottomRightCoord.Latitude = Math.Min(bottomRightCoord.Latitude, location.Latitude);
                 }
 
                 var region = new MKCoordinateRegion();
@@ -162,7 +162,7 @@ namespace Zebble
                 }
 
                 Result.RegionThatFits(region);
-                Result.SetRegion(region, true);
+                Result.SetRegion(region, animated: true);
             }
             else
             {
@@ -193,10 +193,30 @@ namespace Zebble
                 Result.RemoveAnnotation(native);
         }
 
+        async Task RenderRoute(Route route)
+        {
+            if (route == null) return;
+            if (route.Points.Length < 2)
+            {
+                Log.For(this).Warning("The route must contain at least two points!");
+                return;
+            }
+
+            var native = new BasicMapPolyline(route);
+            Result.AddOverlay(native);
+        }
+
+        void RemoveRoute(Route route)
+        {
+            if (route?.Native is MKPolygon native)
+                Result.RemoveOverlay(native);
+        }
+
         public void Dispose()
         {
             View = null;
             Result?.Annotations.Do(x => x.Dispose());
+            Result?.Overlays.Do(x => x.Dispose());
             Result?.Dispose();
             Result = null;
         }

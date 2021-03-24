@@ -36,6 +36,10 @@ namespace Zebble
 
         public override string Subtitle => View.Subtitle;
 
-        protected override void Dispose(bool disposing) { View = null; base.Dispose(disposing); }
+        protected override void Dispose(bool disposing)
+        {
+            View = null;
+            base.Dispose(disposing);
+        }
     }
 }

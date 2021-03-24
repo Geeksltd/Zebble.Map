@@ -9,7 +9,10 @@ namespace Zebble.Mvvm
         public const int MaximumZoomLevel = 20;
         public static int DefaultZoomLevel = 13;
 
-        public readonly CollectionViewModel<Annotation> Annotations = new CollectionViewModel<Annotation>();
+        public readonly CollectionViewModel<Annotation> Annotations = new();
+
+        public readonly CollectionViewModel<Route> Routes = new();
+
 
         public readonly TwoWayBindable<MapTypes> MapType = new();
 

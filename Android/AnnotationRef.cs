@@ -1,10 +1,5 @@
-namespace Zebble
+﻿namespace Zebble
 {
-    partial class Annotation
-    {
-        internal bool Flat { get; set; }
-    }
-
     class AnnotationRef : Java.Lang.Object
     {
         internal Annotation Annotation;
@@ -15,6 +10,7 @@ namespace Zebble
         {
             Annotation?.Dispose();
             Annotation = null;
+
             base.Dispose(disposing);
         }
     }

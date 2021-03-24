@@ -4,7 +4,7 @@ namespace Zebble
     using Android.Gms.Maps.Model;
     using Olive.GeoLocation;
 
-    static class AndroidRenderExtensions
+    static class RenderExtensions
     {
         public static LatLng Render(this IGeoLocation coordinate)
         {
@@ -20,6 +20,6 @@ namespace Zebble
                 .InvokeRotateGesturesEnabled(view.Map.Rotatable.Value);
         }
 
-        public static GeoLocation ToLocation(this LatLng point) => new GeoLocation(point.Latitude, point.Longitude);
+        public static GeoLocation ToLocation(this LatLng point) => new(point.Latitude, point.Longitude);
     }
 }

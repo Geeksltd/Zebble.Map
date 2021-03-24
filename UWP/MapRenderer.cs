@@ -12,6 +12,7 @@
     using Olive;
     using Olive.GeoLocation;
     using Zebble.Mvvm;
+    using Windows.Services.Maps;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     class MapRenderer : INativeRenderer
@@ -28,7 +29,7 @@
                 HorizontalAlignment = Windows.UI.Xaml.HorizontalAlignment.Stretch,
             };
 
-            Windows.Services.Maps.MapService.ServiceToken = "HaXjmFYYzKaodYsgdNp2~PK515Syb0c0Z5AeqFmfuWQ~Anxgm-h_lBeSoSpJmDR5JDBovDqEU8wqmirJ4RzVuOvZiHS8uo8NLKE8M9L4ZPYP";
+            MapService.ServiceToken = "HaXjmFYYzKaodYsgdNp2~PK515Syb0c0Z5AeqFmfuWQ~Anxgm-h_lBeSoSpJmDR5JDBovDqEU8wqmirJ4RzVuOvZiHS8uo8NLKE8M9L4ZPYP";
 
             Result.MapServiceToken = "HaXjmFYYzKaodYsgdNp2~PK515Syb0c0Z5AeqFmfuWQ~Anxgm-h_lBeSoSpJmDR5JDBovDqEU8wqmirJ4RzVuOvZiHS8uo8NLKE8M9L4ZPYP";
 
@@ -48,6 +49,7 @@
             {
                 await ApplyZoom();
                 foreach (var a in View.Map.Annotations) await RenderAnnotation(a);
+                foreach (var r in View.Map.Routes) await RenderRoute(r);
             });
 
             return Result;
@@ -93,7 +95,7 @@
             View.Map.CenterOfVisibleRegion.Set(region);
         }
 
-        GeoLocation GetGeoLocation(Geopoint point) => new GeoLocation(point.Position.Latitude, point.Position.Longitude);
+        GeoLocation GetGeoLocation(Geopoint point) => new(point.Position.Latitude, point.Position.Longitude);
 
         async Task Calculate()
         {
@@ -110,6 +112,8 @@
             View.Map.Rotatable.ChangedBySource += () => Thread.UI.Run(RotatableChanged);
             View.Map.Annotations.Added += a => Thread.UI.Run(() => RenderAnnotation(a));
             View.Map.Annotations.Removing += a => Thread.UI.Run(() => RemoveAnnotation(a));
+            View.Map.Routes.Added += r => Thread.UI.Run(() => RenderRoute(r));
+            View.Map.Routes.Removing += r => Thread.UI.Run(() => RemoveRoute(r));
             View.Map.Center.ChangedBySource += () => Thread.UI.Run(ApplyZoom);
             View.Map.MapType.ChangedBySource += () => Thread.UI.Run(() => Result.Style = GetMapType());
             Result.MapTapped += Result_MapTapped;
@@ -201,6 +205,40 @@
                 Result.MapElements.Remove(native);
         }
 
+        async Task RenderRoute(Route route)
+        {
+            if (route == null || Result == null) return;
+            if (route.Points.Length < 2)
+            {
+                Log.For(this).Warning("The route must contain at least two points!");
+                return;
+            }
+
+            var path = route.Points.Select(l => l.Position()).ToArray();
+
+            var polyline = new MapPolyline
+            {
+                Path = new Geopath(path),
+                StrokeColor = route.Color.Render(),
+                StrokeThickness = route.Thickness
+            };
+
+            route.Native = polyline;
+
+            Result.MapElements.Add(polyline);
+        }
+
+        void RemoveRoute(Route route)
+        {
+            if (Result == null || route == null) return;
+
+            var native = route.Native as MapPolyline;
+            if (native == null) return;
+
+            if (Result.MapElements.Contains(native))
+                Result.MapElements.Remove(native);
+        }
+
         async Task ApplyZoom()
         {
             if (Result == null) return;
@@ -212,30 +250,17 @@
                 await Result.TrySetViewAsync(center, View.Map.ZoomLevel.Value).AsTask()
                     .WithTimeout(1.Seconds(), timeoutAction: () => Log.For(this).Warning("Map.TrySetViewAsync() timed out."));
             }
-            else if (View.Map.Annotations.Any())
+            else if (View.Map.Annotations.Any() || View.Map.Routes.Any())
             {
-                var points = new List<Geopoint>
-                {
-                    new Geopoint(new BasicGeoposition
-                    {
-                        Latitude = center.Position.Latitude,
-                        Longitude = center.Position.Longitude
-                    })
-                };
+                var points = new List<Geopoint> { center };
 
-                foreach (var annotation in View.Map.Annotations)
-                {
-                    points.Add(new Geopoint(new BasicGeoposition
-                    {
-                        Latitude = annotation.Location.Latitude,
-                        Longitude = annotation.Location.Longitude
-                    }));
-                }
+                foreach (var location in View.Map.Annotations.Select(a => a.Location).Concat(View.Map.Routes.SelectMany(r => r.Points)))
+                    points.Add(location.Render());
 
                 var mapScene = MapScene.CreateFromLocations(points);
 
                 await Result.TrySetSceneAsync(mapScene).AsTask()
-                    .WithTimeout(1.Seconds(), timeoutAction: () => Log.For(this).Warning("Map.TrySetViewAsync() timed out.")); ;
+                    .WithTimeout(1.Seconds(), timeoutAction: () => Log.For(this).Warning("Map.TrySetViewAsync() timed out."));
             }
             else
             {
@@ -255,18 +280,6 @@
             }
 
             Result = null;
-        }
-    }
-
-    public static class RenderExtensions
-    {
-        public static Geopoint Render(this IGeoLocation location)
-        {
-            return new Geopoint(new BasicGeoposition
-            {
-                Latitude = location.Latitude,
-                Longitude = location.Longitude
-            });
         }
     }
 }
