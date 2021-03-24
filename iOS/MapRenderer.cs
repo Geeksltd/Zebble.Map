@@ -208,7 +208,7 @@ namespace Zebble
 
         void RemoveRoute(Route route)
         {
-            if (route?.Native is MKPolygon native)
+            if (route?.Native is MKPolyline native)
                 Result.RemoveOverlay(native);
         }
 
