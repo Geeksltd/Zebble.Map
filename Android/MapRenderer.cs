@@ -23,7 +23,7 @@ namespace Zebble
             View = (MapView)renderer.View;
 
             View.Map.ShowZoomControls.ChangedBySource += () => Thread.UI.Run(() => Map.UiSettings.ZoomControlsEnabled = View.Map.ShowZoomControls.Value);
-            View.Map.Zoomable.ChangedBySource += () => Thread.UI.Run(() => Map.UiSettings.ZoomControlsEnabled = View.Map.Zoomable.Value);
+            View.Map.Zoomable.ChangedBySource += () => Thread.UI.Run(() => Map.UiSettings.ZoomGesturesEnabled = View.Map.Zoomable.Value);
             View.Map.Pannable.ChangedBySource += () => Thread.UI.Run(() => Map.UiSettings.ScrollGesturesEnabled = View.Map.Pannable.Value);
             View.Map.Rotatable.ChangedBySource += () => Thread.UI.Run(() => Map.UiSettings.RotateGesturesEnabled = View.Map.Rotatable.Value);
             View.Map.ZoomLevel.ChangedBySource += () => Thread.UI.Run(() => Map.AnimateCamera(CameraUpdateFactory.ZoomBy(View.Map.ZoomLevel.Value)));

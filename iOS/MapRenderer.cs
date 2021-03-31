@@ -10,6 +10,7 @@ namespace Zebble
     using Olive;
     using Olive.GeoLocation;
     using Zebble.Mvvm;
+    using CoreGraphics;
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     class MapRenderer : INativeRenderer
@@ -20,9 +21,8 @@ namespace Zebble
         public async Task<UIView> Render(Renderer renderer)
         {
             View = (MapView)renderer.View;
-            Result = new MKMapView
+            Result = new MKMapView(CGRect.Empty)
             {
-                Frame = View.GetFrame(),
                 ScrollEnabled = View.Map.Pannable.Value,
                 RotateEnabled = View.Map.Rotatable.Value,
                 ZoomEnabled = CanZoom(),
@@ -36,6 +36,7 @@ namespace Zebble
             Thread.UI.Post(async () =>
             {
                 Result.CenterCoordinate = await GetCenter();
+                Result.Frame = View.GetFrame();
 
                 await View.Map.Annotations.AwaitAll(RenderAnnotation);
                 await View.Map.Routes.AwaitAll(RenderRoute);
