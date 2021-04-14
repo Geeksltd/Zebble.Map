@@ -1,5 +1,6 @@
 ﻿namespace Zebble
 {
+    using Android.Runtime;
     using Android.Views;
     using Android.Widget;
     using System;
@@ -8,8 +9,12 @@
     class MapLayout : FrameLayout
     {
         View View;
+        bool IsDisposed;
 
         public MapLayout(View view) : base(Renderer.Context) => View = view;
+
+        [Preserve]
+        protected MapLayout(IntPtr handle, JniHandleOwnership transfer) : base(handle, transfer) { }
 
         public override bool OnInterceptTouchEvent(MotionEvent ev)
         {
@@ -24,6 +29,18 @@
             }
 
             return base.OnInterceptTouchEvent(ev);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && !IsDisposed)
+            {
+                IsDisposed = true;
+                RemoveAllViews();
+                View = null;
+            }
+
+            base.Dispose(disposing);
         }
     }
 }
