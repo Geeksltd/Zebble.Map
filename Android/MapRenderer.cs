@@ -34,7 +34,7 @@ namespace Zebble
             View.Map.Center.ChangedBySource += () => Thread.UI.Run(MoveToRegion);
             View.Map.MapType.ChangedBySource += () => Thread.UI.Run(() => Map.MapType = GetMapType());
 
-            Container = new MapLayout(Renderer.Context) { Id = FindFreeId() };
+            Container = new MapLayout(View) { Id = FindFreeId() };
 
             Thread.UI.Post(async () => await LoadMap());
 
@@ -70,12 +70,12 @@ namespace Zebble
             if (IsDisposing()) return;
 
             await View.Map.Annotations.AwaitAll(RenderAnnotation);
+            if (IsDisposing()) return;
+
             await View.Map.Routes.AwaitAll(RenderRoute);
             if (IsDisposing()) return;
 
             Map.MapType = GetMapType();
-
-            await Task.CompletedTask;
         }
 
         MapFragment CreateFragment(MapLayout view, GoogleMapOptions options)
